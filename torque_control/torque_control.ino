@@ -29,7 +29,9 @@
 #define PIN_SPI1_SCK 68   // SCK pin
 
 
-
+bool open = false;
+bool close = false;
+bool hold = true;
 
 //PID parameters for constant force gripping
 float Kp = 0.3;
@@ -155,6 +157,7 @@ void setup() {
 }
 
 void loop() {
+  checkSerialInput();
 
 #if ENABLE_MAGNETIC_SENSOR
 
@@ -168,14 +171,30 @@ void loop() {
   y -= yOffset;
   z -= zOffset;
 
-float output=computePIDOutput(z);
+  float output = computePIDOutput(z);
+
   if (digitalRead(BUTTON1) == LOW) {
-    
-     target_voltage =  -output;  // PID macht Kraftregelung für close
+    open = false;
+    close = true;
+    hold = false;  // PID macht Kraftregelung für close
   } else if (digitalRead(BUTTON2) == LOW) {
+    open = true;
+    close = false;
+    hold = false;
+  } else if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
+    open = false;
+    close = false;
+    hold = true;
+  }
+
+
+  if (close) {
+
+    target_voltage = -output;  // PID macht Kraftregelung für close
+  } else if (open) {
     target_voltage = 5;  // open gripper
     Serial.println("open");
-  } else {
+  } else if (hold) {
     target_voltage = 0;
   }
   // print the magnetic field data
@@ -263,7 +282,7 @@ float computePIDOutput(float current_force) {
 
   float output = -Kp * error + Ki * pid_integral + Kd * derivative;
   //Serial.println("output:");
-  
+
   motor.move(target_voltage);
   pid_last_error = error;
   pid_last_time = now;
@@ -278,4 +297,30 @@ float getDistance() {
   Serial.println(d);
 
   //30 rad von zu bis offen
+}
+
+void checkSerialInput() {
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');  // Read input until newline
+    input.trim();                                 // Remove any leading/trailing whitespace
+
+
+
+    if (input.startsWith("open")) {
+      open = true;
+      close = false;
+      hold = false;
+
+    } else if (input == "close") {
+      open = false;
+      close = true;
+      hold = false;
+    }
+
+    else if (input == "PING") {
+      Serial.println("PONG");  // Respond to initialization check
+    } else {
+      Serial.println("Error: Invalid command. Use 'kp <value>', 'ki <value>', 'kd <value>', 'alpha <value>', 'd <0/1>', 'bridge on', or 'bridge off'.");
+    }
+  }
 }
