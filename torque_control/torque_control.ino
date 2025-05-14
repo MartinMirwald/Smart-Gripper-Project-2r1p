@@ -23,10 +23,10 @@
 #include <SimpleFOC.h>
 
 // define SPI pins for TLE5012 sensor
-#define PIN_SPI1_SS0 94  // Chip Select (CS) pin
-#define PIN_SPI1_MOSI 69 // MOSI pin
-#define PIN_SPI1_MISO 95 // MISO pin
-#define PIN_SPI1_SCK 68  // SCK pin
+#define PIN_SPI1_SS0 94   // Chip Select (CS) pin
+#define PIN_SPI1_MOSI 69  // MOSI pin
+#define PIN_SPI1_MISO 95  // MISO pin
+#define PIN_SPI1_SCK 68   // SCK pin
 
 
 
@@ -56,8 +56,8 @@ TLE5012Sensor tle5012Sensor(&SPI3W1, PIN_SPI1_SS0, PIN_SPI1_MISO, PIN_SPI1_MOSI,
 // BLDC motor instance BLDCMotor (polepairs, motor phase resistance, motor KV
 // rating, motor phase inductance)
 BLDCMotor motor = BLDCMotor(
-    7, 0.24, 360,
-    0.000133); // 7 pole pairs, 0.24 Ohm phase resistance, 360 KV and 0.000133H
+  7, 0.24, 360,
+  0.000133);  // 7 pole pairs, 0.24 Ohm phase resistance, 360 KV and 0.000133H
 // you can find more data of motor in the doc
 
 // define driver pins
@@ -87,7 +87,9 @@ double xOffset = 0, yOffset = 0, zOffset = 0;
 #if ENABLE_COMMANDER
 // instantiate the commander
 Commander command = Commander(Serial);
-void doTarget(char *cmd) { command.scalar(&target_voltage, cmd); }
+void doTarget(char *cmd) {
+  command.scalar(&target_voltage, cmd);
+}
 #endif
 
 void setup() {
@@ -123,7 +125,7 @@ void setup() {
   motor.controller = MotionControlType::torque;
 
   // comment out if not needed
-   motor.useMonitoring(Serial);
+  motor.useMonitoring(Serial);
 
   // initialize motor
   motor.init();
@@ -153,9 +155,9 @@ void setup() {
 }
 
 void loop() {
-  
+
 #if ENABLE_MAGNETIC_SENSOR
-  
+
   // read the magnetic field data
   double x, y, z;
   dut.setSensitivity(TLx493D_FULL_RANGE_e);
@@ -177,24 +179,22 @@ void loop() {
   Serial.println("");
 #endif
 
-//martin code
+  //martin code
+  getDistance();
 
-  
-  if (digitalRead(BUTTON1) == LOW) {
+    if (digitalRead(BUTTON1) == LOW) {
     float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung für close
-    
-  }else if (digitalRead(BUTTON1) == High)
-  {
-    target_voltage = 5; // open gripper
-    
-  }else
-  {
+  }
+  else if (digitalRead(BUTTON1) == High) {
+    target_voltage = 5;  // open gripper
+  }
+  else {
     target_voltage = 0;
   }
-  
-motor.loopFOC();  // so schnell wie möglich aufrufen
-motor.move(target_voltage);
-  
+
+  motor.loopFOC();  // so schnell wie möglich aufrufen
+  motor.move(target_voltage);
+
   // update angle sensor data
   tle5012Sensor.update();
   motor.move(target_voltage);
@@ -214,7 +214,7 @@ motor.move(target_voltage);
   // velocity, position or voltage (defined in motor.controller)
   // this function can be run at much lower frequency than loopFOC() function
   // You can also use motor.move() and set the motor.target in the code
- // motor.move(target_voltage);
+  // motor.move(target_voltage);
 #if ENABLE_COMMANDER
   // user communication
   command.run();
@@ -238,7 +238,7 @@ void calibrateSensor() {
     sumY += valY;
     sumZ += valZ;
 
-    delay(10); // Adjust delay as needed
+    delay(10);  // Adjust delay as needed
   }
 
   // Calculate average offsets
@@ -260,9 +260,19 @@ float computePIDOutput(float current_force) {
   float derivative = (error - pid_last_error) / dt;
 
   float output = Kp * error + Ki * pid_integral + Kd * derivative;
-
+  Serial.println(output);
+  motor.move(target_voltage);
   pid_last_error = error;
   pid_last_time = now;
 
-  return constrain(output, -5, 5); // max +/- Spannung deines Motors
+  return constrain(output, -5, 5);  // max +/- Spannung deines Motors
+}
+
+float getDistance() {
+  double d = 0.0;
+  tle5012Sensor.getAngleValue(d);
+  d=d/360;
+  Serial.println(d);
+
+  //30 rad von zu bis offen
 }
