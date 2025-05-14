@@ -25,10 +25,31 @@
 #include <SimpleFOC.h>
 
 // define SPI pins for TLE5012 sensor
-#define PIN_SPI1_SS0 94  // Chip Select (CS) pin
-#define PIN_SPI1_MOSI 69 // MOSI pin
-#define PIN_SPI1_MISO 95 // MISO pin
-#define PIN_SPI1_SCK 68  // SCK pin
+#define PIN_SPI1_SS0 94   // Chip Select (CS) pin
+#define PIN_SPI1_MOSI 69  // MOSI pin
+#define PIN_SPI1_MISO 95  // MISO pin
+#define PIN_SPI1_SCK 68   // SCK pin
+
+
+bool open = false;
+bool close = false;
+bool hold = true;
+
+//PID parameters for constant force gripping
+float Kp = 0.3;
+float Ki = 0.1;
+float Kd = 0.05;
+
+// === PID-Zustände ===
+float pid_integral = 0.0;
+float pid_last_error = 0.0;
+
+// === Sollwert für die Kraft (Magnetfeld-z-Wert) ===
+float force_setpoint = -0.5;
+
+// === Zeit für PID (für D-Glied & I-Glied) ===
+unsigned long pid_last_time = 0;
+
 
 // create an instance of SPIClass3W for 3-wire SPI communication
 tle5012::SPIClass3W tle5012::SPI3W1(2);
@@ -39,8 +60,8 @@ TLE5012Sensor tle5012Sensor(&SPI3W1, PIN_SPI1_SS0, PIN_SPI1_MISO, PIN_SPI1_MOSI,
 // BLDC motor instance BLDCMotor (polepairs, motor phase resistance, motor KV
 // rating, motor phase inductance)
 BLDCMotor motor = BLDCMotor(
-    7, 0.24, 360,
-    0.000133); // 7 pole pairs, 0.24 Ohm phase resistance, 360 KV and 0.000133H
+  7, 0.24, 360,
+  0.000133);  // 7 pole pairs, 0.24 Ohm phase resistance, 360 KV and 0.000133H
 // you can find more data of motor in the doc
 
 // define driver pins
@@ -70,7 +91,9 @@ double xOffset = 0, yOffset = 0, zOffset = 0;
 #if ENABLE_COMMANDER
 // instantiate the commander
 Commander command = Commander(Serial);
-void doTarget(char *cmd) { command.scalar(&target_voltage, cmd); }
+void doTarget(char *cmd) {
+  command.scalar(&target_voltage, cmd);
+}
 #endif
 
 void setup() {
@@ -99,14 +122,14 @@ void setup() {
   motor.linkDriver(&driver);
 
   // aligning voltage
-  motor.voltage_sensor_align = 2;
+  motor.voltage_sensor_align = 4;
   // choose FOC modulation (optional)
   motor.foc_modulation = FOCModulationType::SpaceVectorPWM;
   // set motion control loop to be used
   motor.controller = MotionControlType::torque;
 
   // comment out if not needed
-  // motor.useMonitoring(Serial);
+  motor.useMonitoring(Serial);
 
   // initialize motor
   motor.init();
@@ -136,14 +159,10 @@ void setup() {
 }
 
 void loop() {
+  checkSerialInput();
+
 #if ENABLE_MAGNETIC_SENSOR
-  if (digitalRead(BUTTON1) == LOW) {
-    target_voltage = -3; // close gripper
-  } else if (digitalRead(BUTTON2) == LOW) {
-    target_voltage = 3; // open gripper
-  } else {
-    target_voltage = 0; // stop gripper
-  }
+
   // read the magnetic field data
   double x, y, z;
   dut.setSensitivity(TLx493D_FULL_RANGE_e);
@@ -154,6 +173,40 @@ void loop() {
   y -= yOffset;
   z -= zOffset;
 
+  float output = computePIDOutput(z);
+
+
+  //read buttons decide open close hold state
+  if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
+    open = false;
+    close = false;
+    hold = true;
+    delay(1000);
+  } else if (digitalRead(BUTTON1) == LOW) {
+    open = false;
+    close = true;
+    hold = false;  // PID macht Kraftregelung für close
+  } else if (digitalRead(BUTTON2) == LOW) {
+    open = true;
+    close = false;
+    hold = false;
+  }
+
+  // act according to open close hold state
+  if (close) {
+
+    target_voltage = -output;  // PID macht Kraftregelung für close
+    Serial.println("close");
+
+  } else if (open) {
+    output = 6;
+    target_voltage = 6;  // open gripper
+    Serial.println("open");
+  } else if (hold) {
+    output =0;
+    target_voltage = 0;
+    Serial.println("hold");
+  }
   // print the magnetic field data
   Serial.print(x);
   Serial.print(",");
@@ -162,10 +215,22 @@ void loop() {
   Serial.print(",");
 
   Serial.print(z);
+  Serial.print(",");
+  Serial.print(output);
   Serial.println("");
 #endif
+
+  //martin code
+  //getDistance();
+
+
+
+
   // update angle sensor data
   tle5012Sensor.update();
+  motor.move(target_voltage);
+
+//end martin code
 #if ENABLE_READ_ANGLE
   Serial.print(tle5012Sensor.getSensorAngle());
   Serial.println("");
@@ -204,7 +269,7 @@ void calibrateSensor() {
     sumY += valY;
     sumZ += valZ;
 
-    delay(10); // Adjust delay as needed
+    delay(10);  // Adjust delay as needed
   }
 
   // Calculate average offsets
@@ -213,3 +278,63 @@ void calibrateSensor() {
   zOffset = sumZ / CALIBRATION_SAMPLES;
 }
 #endif
+
+float computePIDOutput(float current_force) {
+  unsigned long now = millis();
+  float dt = (now - pid_last_time) / 1000.0;
+
+  if (dt <= 0.0) dt = 0.001;
+
+  float error = force_setpoint - current_force;
+
+  pid_integral += error * dt;
+  float derivative = (error - pid_last_error) / dt;
+
+  float output = -Kp * error + Ki * pid_integral + Kd * derivative;
+  //Serial.println("output:");
+
+  motor.move(target_voltage);
+  pid_last_error = error;
+  pid_last_time = now;
+
+  return constrain(output, -5, 5);  // max +/- Spannung deines Motors
+}
+
+float getDistance() {
+  double d = 0.0;
+  //Tle5012Sensor.getAngleValue(d);
+  // d=d/360;
+  Serial.println(d);
+
+  //30 rad von zu bis offen
+}
+
+void checkSerialInput() {
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');  // Read input until newline
+    input.trim();                                 // Remove any leading/trailing whitespace
+
+
+
+    if (input.startsWith("open")) {
+      open = true;
+      close = false;
+      hold = false;
+
+    } else if (input == "close") {
+      open = false;
+      close = true;
+      hold = false;
+    } else if (input == "hold") {
+      open = false;
+      close = false;
+      hold = true;
+    }
+
+    else if (input == "PING") {
+      Serial.println("PONG");  // Respond to initialization check
+    } else {
+      Serial.println("Error: Invalid command. Use 'kp <value>', 'ki <value>', 'kd <value>', 'alpha <value>', 'd <0/1>', 'bridge on', or 'bridge off'.");
+    }
+  }
+}
