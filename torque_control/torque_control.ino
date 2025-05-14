@@ -178,20 +178,22 @@ void loop() {
 #endif
 
 //martin code
-motor.loopFOC();  // so schnell wie möglich aufrufen
 
   
   if (digitalRead(BUTTON1) == LOW) {
-    float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung
-    motor.move(target_voltage);
+    float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung für close
+    
   }else if (digitalRead(BUTTON1) == High)
   {
-    target_voltage = 5; // close gripper
-    motor.move(target_voltage);
+    target_voltage = 5; // open gripper
+    
+  }else
+  {
+    target_voltage = 0;
   }
   
 motor.loopFOC();  // so schnell wie möglich aufrufen
-
+motor.move(target_voltage);
   
   // update angle sensor data
   tle5012Sensor.update();
