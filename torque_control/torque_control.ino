@@ -32,7 +32,7 @@
 
 
 //PID parameters for constant force gripping
-float Kp = 0.5;
+float Kp = 0.3;
 float Ki = 0.1;
 float Kd = 0.05;
 
@@ -168,9 +168,10 @@ void loop() {
   y -= yOffset;
   z -= zOffset;
 
-
+float output=computePIDOutput(z);
   if (digitalRead(BUTTON1) == LOW) {
-    float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung für close
+    
+     target_voltage =  -output;  // PID macht Kraftregelung für close
   } else if (digitalRead(BUTTON2) == LOW) {
     target_voltage = 5;  // open gripper
     Serial.println("open");
@@ -185,11 +186,13 @@ void loop() {
   Serial.print(",");
 
   Serial.print(z);
+  Serial.print(",");
+  Serial.print(output);
   Serial.println("");
 #endif
 
   //martin code
-  getDistance();
+  //getDistance();
 
 
 
@@ -258,13 +261,14 @@ float computePIDOutput(float current_force) {
   pid_integral += error * dt;
   float derivative = (error - pid_last_error) / dt;
 
-  float output = Kp * error + Ki * pid_integral + Kd * derivative;
-  Serial.println(output);
+  float output = -Kp * error + Ki * pid_integral + Kd * derivative;
+  //Serial.println("output:");
+  
   motor.move(target_voltage);
   pid_last_error = error;
   pid_last_time = now;
 
-  return constrain(output, -5, 5);  // max +/- Spannung deines Motors
+  return constrain(output, -6, 6);  // max +/- Spannung deines Motors
 }
 
 float getDistance() {
