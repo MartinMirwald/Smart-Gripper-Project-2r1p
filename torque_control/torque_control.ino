@@ -34,9 +34,9 @@ bool close = false;
 bool hold = true;
 
 //PID parameters for constant force gripping
-float Kp = 0.3;
-float Ki = 0.1;
-float Kd = 0.05;
+float Kp = 1.25;
+float Ki = 0.0;
+float Kd = 0.00;
 
 // === PID-Zustände ===
 float pid_integral = 0.0;
