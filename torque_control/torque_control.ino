@@ -116,7 +116,7 @@ void setup() {
   motor.linkDriver(&driver);
 
   // aligning voltage
-  motor.voltage_sensor_align = 2;
+  motor.voltage_sensor_align = 3;
   // choose FOC modulation (optional)
   motor.foc_modulation = FOCModulationType::SpaceVectorPWM;
   // set motion control loop to be used
@@ -176,15 +176,26 @@ void loop() {
   Serial.print(z);
   Serial.println("");
 #endif
+
+//martin code
 motor.loopFOC();  // so schnell wie möglich aufrufen
 
   
+  if (digitalRead(BUTTON1) == LOW) {
+    float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung
+    motor.move(target_voltage);
+  }else if (digitalRead(BUTTON1) == High)
+  {
+    target_voltage = 5; // close gripper
+    motor.move(target_voltage);
+  }
+  
 
-  float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung
-
-  motor.move(target_voltage);
+  
   // update angle sensor data
   tle5012Sensor.update();
+
+//end martin code
 #if ENABLE_READ_ANGLE
   Serial.print(tle5012Sensor.getSensorAngle());
   Serial.println("");
