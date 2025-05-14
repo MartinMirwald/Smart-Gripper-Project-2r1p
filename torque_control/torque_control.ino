@@ -118,7 +118,7 @@ void setup() {
   motor.linkDriver(&driver);
 
   // aligning voltage
-  motor.voltage_sensor_align = 3;
+  motor.voltage_sensor_align = 4;
   // choose FOC modulation (optional)
   motor.foc_modulation = FOCModulationType::SpaceVectorPWM;
   // set motion control loop to be used
@@ -168,6 +168,15 @@ void loop() {
   y -= yOffset;
   z -= zOffset;
 
+
+  if (digitalRead(BUTTON1) == LOW) {
+    float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung für close
+  } else if (digitalRead(BUTTON2) == LOW) {
+    target_voltage = 5;  // open gripper
+    Serial.println("open");
+  } else {
+    target_voltage = 0;
+  }
   // print the magnetic field data
   Serial.print(x);
   Serial.print(",");
@@ -182,18 +191,8 @@ void loop() {
   //martin code
   getDistance();
 
-    if (digitalRead(BUTTON1) == LOW) {
-    float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung für close
-  }
-  else if (digitalRead(BUTTON1) == HIGH) {
-    target_voltage = 5;  // open gripper
-  }
-  else {
-    target_voltage = 0;
-  }
 
-  motor.loopFOC();  // so schnell wie möglich aufrufen
-  motor.move(target_voltage);
+
 
   // update angle sensor data
   tle5012Sensor.update();
@@ -208,13 +207,13 @@ void loop() {
   // the faster you run this function the better
   // Arduino UNO loop  ~1kHz
   // Bluepill loop ~10kHz
-  //motor.loopFOC();
+  motor.loopFOC();
 
   // Motion control function
   // velocity, position or voltage (defined in motor.controller)
   // this function can be run at much lower frequency than loopFOC() function
   // You can also use motor.move() and set the motor.target in the code
-  // motor.move(target_voltage);
+  motor.move(target_voltage);
 #if ENABLE_COMMANDER
   // user communication
   command.run();
@@ -271,7 +270,7 @@ float computePIDOutput(float current_force) {
 float getDistance() {
   double d = 0.0;
   //Tle5012Sensor.getAngleValue(d);
- // d=d/360;
+  // d=d/360;
   Serial.println(d);
 
   //30 rad von zu bis offen
