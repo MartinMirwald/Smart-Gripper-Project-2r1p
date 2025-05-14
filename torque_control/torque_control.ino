@@ -28,6 +28,25 @@
 #define PIN_SPI1_MISO 95 // MISO pin
 #define PIN_SPI1_SCK 68  // SCK pin
 
+
+
+
+//PID parameters for constant force gripping
+float Kp = 0.5;
+float Ki = 0.1;
+float Kd = 0.05;
+
+// === PID-Zustände ===
+float pid_integral = 0.0;
+float pid_last_error = 0.0;
+
+// === Sollwert für die Kraft (Magnetfeld-z-Wert) ===
+float force_setpoint = 2.5;
+
+// === Zeit für PID (für D-Glied & I-Glied) ===
+unsigned long pid_last_time = 0;
+
+
 // create an instance of SPIClass3W for 3-wire SPI communication
 tle5012::SPIClass3W tle5012::SPI3W1(2);
 // create an instance of TLE5012Sensor
@@ -104,7 +123,7 @@ void setup() {
   motor.controller = MotionControlType::torque;
 
   // comment out if not needed
-  // motor.useMonitoring(Serial);
+   motor.useMonitoring(Serial);
 
   // initialize motor
   motor.init();
@@ -134,14 +153,9 @@ void setup() {
 }
 
 void loop() {
+  
 #if ENABLE_MAGNETIC_SENSOR
-  if (digitalRead(BUTTON1) == LOW) {
-    target_voltage = -3; // close gripper
-  } else if (digitalRead(BUTTON2) == LOW) {
-    target_voltage = 3; // open gripper
-  } else {
-    target_voltage = 0; // stop gripper
-  }
+  
   // read the magnetic field data
   double x, y, z;
   dut.setSensitivity(TLx493D_FULL_RANGE_e);
@@ -162,6 +176,13 @@ void loop() {
   Serial.print(z);
   Serial.println("");
 #endif
+motor.loopFOC();  // so schnell wie möglich aufrufen
+
+  
+
+  float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung
+
+  motor.move(target_voltage);
   // update angle sensor data
   tle5012Sensor.update();
 #if ENABLE_READ_ANGLE
@@ -172,13 +193,13 @@ void loop() {
   // the faster you run this function the better
   // Arduino UNO loop  ~1kHz
   // Bluepill loop ~10kHz
-  motor.loopFOC();
+  //motor.loopFOC();
 
   // Motion control function
   // velocity, position or voltage (defined in motor.controller)
   // this function can be run at much lower frequency than loopFOC() function
   // You can also use motor.move() and set the motor.target in the code
-  motor.move(target_voltage);
+ // motor.move(target_voltage);
 #if ENABLE_COMMANDER
   // user communication
   command.run();
@@ -211,3 +232,22 @@ void calibrateSensor() {
   zOffset = sumZ / CALIBRATION_SAMPLES;
 }
 #endif
+
+float computePIDOutput(float current_force) {
+  unsigned long now = millis();
+  float dt = (now - pid_last_time) / 1000.0;
+
+  if (dt <= 0.0) dt = 0.001;
+
+  float error = force_setpoint - current_force;
+
+  pid_integral += error * dt;
+  float derivative = (error - pid_last_error) / dt;
+
+  float output = Kp * error + Ki * pid_integral + Kd * derivative;
+
+  pid_last_error = error;
+  pid_last_time = now;
+
+  return constrain(output, -12.0, 12.0); // max +/- Spannung deines Motors
+}
