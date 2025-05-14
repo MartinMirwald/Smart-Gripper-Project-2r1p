@@ -17,6 +17,8 @@
  *
  * This is a basic example; you can be creative to improve this gripper!
  */
+
+ //TEST
 #include "TLE5012Sensor.h"
 #include "TLx493D_inc.hpp"
 #include "config.h"
