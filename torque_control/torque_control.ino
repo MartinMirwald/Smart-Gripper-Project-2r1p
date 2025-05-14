@@ -315,6 +315,10 @@ void checkSerialInput() {
       open = false;
       close = true;
       hold = false;
+    } else if (input == "hold") {
+      open = false;
+      close = false;
+      hold = true;
     }
 
     else if (input == "PING") {
