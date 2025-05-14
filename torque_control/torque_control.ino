@@ -173,6 +173,8 @@ void loop() {
 
   float output = computePIDOutput(z);
 
+
+//read buttons decide open close hold state
   if (digitalRead(BUTTON1) == LOW) {
     open = false;
     close = true;
@@ -187,7 +189,7 @@ void loop() {
     hold = true;
   }
 
-
+// act according to open close hold state
   if (close) {
 
     target_voltage = -output;  // PID macht Kraftregelung für close
@@ -313,7 +315,7 @@ void checkSerialInput() {
 
     } else if (input == "close") {
       open = false;
-      close = true;
+      close = true;true
       hold = false;
     } else if (input == "hold") {
       open = false;
