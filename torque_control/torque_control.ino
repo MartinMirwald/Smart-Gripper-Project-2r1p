@@ -190,10 +190,12 @@ motor.loopFOC();  // so schnell wie möglich aufrufen
     motor.move(target_voltage);
   }
   
+motor.loopFOC();  // so schnell wie möglich aufrufen
 
   
   // update angle sensor data
   tle5012Sensor.update();
+  motor.move(target_voltage);
 
 //end martin code
 #if ENABLE_READ_ANGLE
