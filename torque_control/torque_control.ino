@@ -185,7 +185,7 @@ void loop() {
     if (digitalRead(BUTTON1) == LOW) {
     float target_voltage = computePIDOutput(z);  // PID macht Kraftregelung für close
   }
-  else if (digitalRead(BUTTON1) == High) {
+  else if (digitalRead(BUTTON1) == HIGH) {
     target_voltage = 5;  // open gripper
   }
   else {
@@ -270,8 +270,8 @@ float computePIDOutput(float current_force) {
 
 float getDistance() {
   double d = 0.0;
-  tle5012Sensor.getAngleValue(d);
-  d=d/360;
+  //Tle5012Sensor.getAngleValue(d);
+ // d=d/360;
   Serial.println(d);
 
   //30 rad von zu bis offen
