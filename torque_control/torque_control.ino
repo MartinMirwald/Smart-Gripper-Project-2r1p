@@ -43,7 +43,7 @@ float pid_integral = 0.0;
 float pid_last_error = 0.0;
 
 // === Sollwert für die Kraft (Magnetfeld-z-Wert) ===
-float force_setpoint = 2.5;
+float force_setpoint = -0.5;
 
 // === Zeit für PID (für D-Glied & I-Glied) ===
 unsigned long pid_last_time = 0;
@@ -174,8 +174,13 @@ void loop() {
   float output = computePIDOutput(z);
 
 
-//read buttons decide open close hold state
-  if (digitalRead(BUTTON1) == LOW) {
+  //read buttons decide open close hold state
+  if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
+    open = false;
+    close = false;
+    hold = true;
+    delay(1000);
+  } else if (digitalRead(BUTTON1) == LOW) {
     open = false;
     close = true;
     hold = false;  // PID macht Kraftregelung für close
@@ -183,21 +188,22 @@ void loop() {
     open = true;
     close = false;
     hold = false;
-  } else if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
-    open = false;
-    close = false;
-    hold = true;
   }
 
-// act according to open close hold state
+  // act according to open close hold state
   if (close) {
 
     target_voltage = -output;  // PID macht Kraftregelung für close
+    Serial.println("close");
+
   } else if (open) {
-    target_voltage = 5;  // open gripper
+    output = 6;
+    target_voltage = 6;  // open gripper
     Serial.println("open");
   } else if (hold) {
+    output =0;
     target_voltage = 0;
+    Serial.println("hold");
   }
   // print the magnetic field data
   Serial.print(x);
@@ -289,7 +295,7 @@ float computePIDOutput(float current_force) {
   pid_last_error = error;
   pid_last_time = now;
 
-  return constrain(output, -6, 6);  // max +/- Spannung deines Motors
+  return constrain(output, -5, 5);  // max +/- Spannung deines Motors
 }
 
 float getDistance() {
@@ -315,7 +321,7 @@ void checkSerialInput() {
 
     } else if (input == "close") {
       open = false;
-      close = true;true
+      close = true;
       hold = false;
     } else if (input == "hold") {
       open = false;
