@@ -264,5 +264,5 @@ float computePIDOutput(float current_force) {
   pid_last_error = error;
   pid_last_time = now;
 
-  return constrain(output, -12.0, 12.0); // max +/- Spannung deines Motors
+  return constrain(output, -5, 5); // max +/- Spannung deines Motors
 }
