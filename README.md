@@ -1,6 +1,8 @@
-# Smart Gripper Project - Team 2r1p 🤖
+# Smart Gripper Project - Team 2r1p - TUM 🤖
 
 ![Star-Wars-Last-Jedi-Easter-Egg-Luke-Hand](https://github.com/user-attachments/assets/050e000a-8525-4df5-85df-97ec0d7f99ca)
+
+"Do. Or do not. There is no try." — Master Yoda
 
 ## Project Overview - Hello There!
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
@@ -149,6 +151,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 - Infineon crew for their guidance and support, may the force be with you!
+- Special thanks to R2‑D2 for compliant beep‑boop translations.
 
 ![r2d2](https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33)
 ![lightsaber](https://github.com/user-attachments/assets/099a09a6-a395-4713-8fd6-07738a3abfc2) 
