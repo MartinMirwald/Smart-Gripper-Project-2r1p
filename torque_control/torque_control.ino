@@ -99,6 +99,10 @@ void doTarget(char *cmd) {
 void setup() {
   // use monitoring with serial
   Serial.begin(115200);
+  while (!Serial) {
+    ; // Wait for serial port to connect. Needed for native USB port only
+  }
+  
   // enable more verbose output for debugging
   // comment out if not needed
   SimpleFOCDebug::enable(&Serial);
@@ -149,12 +153,14 @@ void setup() {
   pinMode(BUTTON2, INPUT);
 #endif
 
-  Serial.print("setup done.\n");
-#if ENABLE_COMMANDER
-  // add target command T
-  command.add('T', doTarget, "target voltage");
-  Serial.println(F("Set the target voltage using serial terminal:"));
-#endif
+  Serial.println(F("Arduino ready for commands."));
+  Serial.println(F("Available commands:"));
+  Serial.println(F("- position <value>: Set position (0-6V)"));
+  Serial.println(F("- open: Open gripper"));
+  Serial.println(F("- close: Close gripper"));
+  Serial.println(F("- hold: Hold current position"));
+  Serial.println(F("- PING: Test connection"));
+  
   _delay(1000);
 }
 
@@ -311,35 +317,44 @@ float getDistance() {
 
 void checkSerialInput() {
   if (Serial.available() > 0) {
-    String input = Serial.readStringUntil('\n');  // Read input until newline
-    input.trim();                                 // Remove any leading/trailing whitespace
-
+    String input = Serial.readStringUntil('\n');
+    input.trim();  // Remove any whitespace
+    
     if (input.startsWith("position ")) {
       // Extract position value
-      float position = input.substring(9).toFloat();
-      // Convert position (0-6V) to target voltage
-      target_voltage = position;
-      open = false;
-      close = false;
-      hold = true;
+      String posStr = input.substring(9);
+      float position = posStr.toFloat();
+      
+      // Convert position (0-100) to voltage (0-6V)
+      float voltage = (position / 100.0) * 6.0;
+      
+      // Set target voltage
+      target_voltage = voltage;
+      Serial.print("Setting position to: ");
+      Serial.print(position);
+      Serial.print("% (");
+      Serial.print(voltage);
+      Serial.println("V)");
     }
-    else if (input.startsWith("open")) {
-      open = true;
-      close = false;
-      hold = false;
-    } else if (input == "close") {
-      open = false;
-      close = true;
-      hold = false;
-    } else if (input == "hold") {
-      open = false;
-      close = false;
-      hold = true;
+    else if (input == "open") {
+      target_voltage = 0.0;  // 0V for open position
+      Serial.println("Opening gripper");
+    }
+    else if (input == "close") {
+      target_voltage = 6.0;  // 6V for closed position
+      Serial.println("Closing gripper");
+    }
+    else if (input == "hold") {
+      // Keep current voltage
+      Serial.println("Holding current position");
     }
     else if (input == "PING") {
-      Serial.println("PONG");  // Respond to initialization check
-    } else {
-      Serial.println("Error: Invalid command. Use 'position <value>', 'open', 'close', or 'hold'.");
+      Serial.println("PONG");
+    }
+    else {
+      Serial.print("Unknown command: ");
+      Serial.println(input);
+      Serial.println("Available commands: position <value>, open, close, hold, PING");
     }
   }
 }
