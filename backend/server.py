@@ -22,8 +22,58 @@ app.add_middleware(
 # Store active connections
 active_connections: List[WebSocket] = []
 arduino = None
-last_arduino_read_time = 0
-ARDUINO_TIMEOUT = 5  # seconds
+
+class ArduinoConnection:
+    def __init__(self):
+        self.serial = None
+        self.last_read_time = 0
+        self.is_connected = False
+
+    def connect(self, port: str) -> bool:
+        try:
+            self.serial = serial.Serial(
+                port=port,
+                baudrate=115200,
+                timeout=1,
+                bytesize=serial.EIGHTBITS,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE
+            )
+            self.is_connected = True
+            self.last_read_time = time.time()
+            return True
+        except Exception as e:
+            print(f"Failed to connect to Arduino: {e}")
+            return False
+
+    def disconnect(self):
+        if self.serial and self.serial.is_open:
+            self.serial.close()
+        self.is_connected = False
+
+    def read_data(self) -> str:
+        if not self.is_connected or not self.serial.is_open:
+            return None
+        try:
+            data = self.serial.readline().decode().strip()
+            if data:
+                self.last_read_time = time.time()
+            return data
+        except Exception as e:
+            print(f"Error reading from Arduino: {e}")
+            return None
+
+    def write_command(self, command: str) -> bool:
+        if not self.is_connected or not self.serial.is_open:
+            return False
+        try:
+            self.serial.write(f"{command}\n".encode())
+            return True
+        except Exception as e:
+            print(f"Error writing to Arduino: {e}")
+            return False
+
+arduino_conn = ArduinoConnection()
 
 def get_arduino_port():
     """Find the Arduino port automatically"""
@@ -77,60 +127,26 @@ def get_arduino_port():
     
     return None
 
-async def reconnect_arduino():
-    """Attempt to reconnect to Arduino"""
-    global arduino
-    if arduino and arduino.is_open:
-        arduino.close()
-    
-    port = get_arduino_port()
-    if port:
-        try:
-            arduino = serial.Serial(
-                port=port,
-                baudrate=115200,
-                timeout=1,
-                bytesize=serial.EIGHTBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE
-            )
-            print(f"Reconnected to Arduino on {port}")
-            return True
-        except Exception as e:
-            print(f"Failed to reconnect to Arduino: {e}")
-    return False
-
 @app.on_event("startup")
 async def startup_event():
     """Initialize Arduino connection on startup"""
-    global arduino
     port = get_arduino_port()
     if port:
-        try:
-            print(f"\nAttempting to connect to {port}...")
-            arduino = serial.Serial(
-                port=port,
-                baudrate=115200,
-                timeout=1,
-                bytesize=serial.EIGHTBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE
-            )
+        if arduino_conn.connect(port):
             print(f"Successfully connected to Arduino on {port}")
             print("Waiting for Arduino to initialize...")
             await asyncio.sleep(2)  # Give Arduino time to reset
             
             # Test connection
             print("Testing connection...")
-            arduino.write(b"PING\n")
-            response = arduino.readline().decode().strip()
+            arduino_conn.write_command("PING")
+            response = arduino_conn.read_data()
             if response == "PONG":
                 print("Arduino connection verified!")
             else:
                 print(f"Warning: Arduino response not as expected. Got: {response}")
-                
-        except Exception as e:
-            print(f"\nFailed to connect to Arduino: {e}")
+        else:
+            print("\nFailed to connect to Arduino")
             print("\nPlease check:")
             print("1. Arduino is properly connected")
             print("2. No other program is using the port")
@@ -143,9 +159,8 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Close Arduino connection on shutdown"""
-    if arduino and arduino.is_open:
-        arduino.close()
-        print("\nArduino connection closed")
+    arduino_conn.disconnect()
+    print("\nArduino connection closed")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -153,33 +168,37 @@ async def websocket_endpoint(websocket: WebSocket):
     active_connections.append(websocket)
     try:
         while True:
-            if arduino and arduino.is_open:
-                try:
-                    # Read data from Arduino
-                    data = arduino.readline().decode().strip()
-                    if data:
-                        try:
-                            # Parse the CSV data
+            if arduino_conn.is_connected:
+                data = arduino_conn.read_data()
+                if data:
+                    try:
+                        # Try to parse as sensor data (CSV format)
+                        if ',' in data:
                             x, y, z, output = map(float, data.split(','))
-                            # Create JSON response
                             response = {
-                                "magneticX": x,
-                                "magneticY": y,
-                                "magneticZ": z,
-                                "output": output
+                                "type": "sensor_data",
+                                "data": {
+                                    "magneticX": x,
+                                    "magneticY": y,
+                                    "magneticZ": z,
+                                    "output": output
+                                }
                             }
-                            # Send to all connected clients
                             await websocket.send_json(response)
-                        except ValueError:
-                            print(f"Invalid data format: {data}")
-                            continue
-                except Exception as e:
-                    print(f"Error reading from Arduino: {e}")
-                    # Try to reconnect if we haven't received data for a while
-                    if time.time() - last_arduino_read_time > ARDUINO_TIMEOUT:
-                        print("Attempting to reconnect to Arduino...")
-                        if await reconnect_arduino():
-                            last_arduino_read_time = time.time()
+                        else:
+                            # Handle command responses
+                            response = {
+                                "type": "command_response",
+                                "data": data
+                            }
+                            await websocket.send_json(response)
+                    except ValueError:
+                        # If parsing fails, send as raw message
+                        response = {
+                            "type": "raw_message",
+                            "data": data
+                        }
+                        await websocket.send_json(response)
             await asyncio.sleep(0.1)  # 100ms delay
     except WebSocketDisconnect:
         print("WebSocket client disconnected")
@@ -191,12 +210,10 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.post("/command/{cmd}")
 async def send_command(cmd: str):
     """Send a command to the Arduino"""
-    if arduino and arduino.is_open:
-        try:
-            arduino.write(f"{cmd}\n".encode())
+    if arduino_conn.is_connected:
+        if arduino_conn.write_command(cmd):
             return {"status": "success", "message": f"Command {cmd} sent"}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": "Failed to send command"}
     return {"status": "error", "message": "Arduino not connected"}
 
 @app.post("/position/{position}")
@@ -205,14 +222,11 @@ async def set_position(position: int):
     if not 0 <= position <= 100:
         return {"status": "error", "message": "Position must be between 0 and 100"}
     
-    if arduino and arduino.is_open:
-        try:
-            # Convert position to voltage (0-100 to 0-6V)
-            voltage = (position / 100) * 6
-            arduino.write(f"position {voltage}\n".encode())
+    if arduino_conn.is_connected:
+        voltage = (position / 100) * 6
+        if arduino_conn.write_command(f"position {voltage}"):
             return {"status": "success", "message": f"Position set to {position}%"}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": "Failed to set position"}
     return {"status": "error", "message": "Arduino not connected"}
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { arduinoService } from '../services/ArduinoService';
+import { arduinoService, ArduinoMessage, SensorData } from '../services/ArduinoService';
 
 interface DataPoint {
   time: string;
@@ -16,6 +16,7 @@ const AnalyticsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [position, setPosition] = useState(50);
   const [isMoving, setIsMoving] = useState(false);
+  const [status, setStatus] = useState<string>('');
   
   // Connect to backend when component mounts
   useEffect(() => {
@@ -42,22 +43,27 @@ const AnalyticsPage: React.FC = () => {
   useEffect(() => {
     if (!isConnected) return;
 
-    const unsubscribe = arduinoService.onData((newData) => {
-      setData(prevData => {
-        const newPoint: DataPoint = {
-          time: '0s ago',
-          ...newData
-        };
-        
-        // Shift all times one second older
-        const updatedData = prevData.map((point, i) => ({
-          ...point,
-          time: `${i + 1}s ago`
-        }));
-        
-        // Add new point and remove oldest if more than 20 points
-        return [newPoint, ...updatedData.slice(0, 19)];
-      });
+    const unsubscribe = arduinoService.onData((message: ArduinoMessage) => {
+      if (message.type === 'sensor_data') {
+        const sensorData = message.data as SensorData;
+        setData(prevData => {
+          const newPoint: DataPoint = {
+            time: '0s ago',
+            ...sensorData
+          };
+          
+          // Shift all times one second older
+          const updatedData = prevData.map((point, i) => ({
+            ...point,
+            time: `${i + 1}s ago`
+          }));
+          
+          // Add new point and remove oldest if more than 20 points
+          return [newPoint, ...updatedData.slice(0, 19)];
+        });
+      } else if (message.type === 'command_response') {
+        setStatus(message.data as string);
+      }
     });
 
     return () => unsubscribe();
@@ -110,6 +116,12 @@ const AnalyticsPage: React.FC = () => {
       {error && (
         <div className="p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-200 mb-4">
           {error}
+        </div>
+      )}
+
+      {status && (
+        <div className="p-4 bg-blue-500/20 border border-blue-500 rounded-lg text-blue-200 mb-4">
+          {status}
         </div>
       )}
 
