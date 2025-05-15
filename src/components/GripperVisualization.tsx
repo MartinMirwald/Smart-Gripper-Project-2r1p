@@ -144,33 +144,37 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
         </div>
 
         {/* Force indicator */}
-        <div className="absolute top-3 left-3 bg-slate-900/90 p-2 rounded-md shadow-lg backdrop-blur-sm border border-blue-400/20 z-10">
-          <div className="text-xs font-medium text-blue-400 flex items-center">
-            <span className="mr-2">Force</span>
-            <span className={`w-1.5 h-1.5 rounded-full ${forceColor}`}></span>
+        <div className="absolute top-4 left-4 bg-slate-900/95 p-5 rounded-xl shadow-lg backdrop-blur-sm border border-blue-400/30 z-10 w-44">
+          <div className="text-base font-semibold text-blue-400 flex items-center justify-between">
+            <span>Force</span>
+            <span className={`w-3 h-3 rounded-full ${forceColor} shadow-[0_0_8px_rgba(59,130,246,0.5)]`}></span>
           </div>
-          <div className="bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
+          <div className="bg-slate-800/80 rounded-full h-3 mt-4 overflow-hidden border border-slate-700/50">
             <div 
-              className={`h-1.5 rounded-full ${forceColor} transition-all duration-300`}
+              className={`h-3 rounded-full ${forceColor} transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.3)]`}
               style={{ width: `${Math.min(Math.abs(force), 100)}%` }}
             ></div>
           </div>
-          <div className="text-xs text-right mt-1 font-medium text-blue-300">{force.toFixed(1)}</div>
+          <div className="text-lg text-right mt-3 font-bold text-blue-300">{force.toFixed(1)}</div>
         </div>
         
         {/* Position and distance indicator */}
-        <div className="absolute bottom-3 right-3 bg-slate-900/90 p-2 rounded-md shadow-lg backdrop-blur-sm border border-blue-400/20 z-10">
-          <div className="text-xs font-medium text-blue-400">Position</div>
-          <div className="text-right font-bold text-xs text-blue-300">
+        <div className="absolute top-4 right-4 bg-slate-900/95 p-5 rounded-xl shadow-lg backdrop-blur-sm border border-blue-400/30 z-10 w-44">
+          <div className="text-base font-semibold text-blue-400">Position</div>
+          <div className="text-right font-bold text-lg text-blue-300 mt-2">
             {Math.round(clampedPosition)}%
             {isOutOfRange && (
               <span className="ml-1 text-yellow-500">(clamped)</span>
             )}
           </div>
-          <div className="text-xs text-blue-400 mt-1">Distance: {distanceMm}mm</div>
+          <div className="text-base text-blue-400 mt-4 flex items-center justify-between">
+            <span>Distance</span>
+            <span className="font-medium text-blue-300">{distanceMm}mm</span>
+          </div>
           {isOutOfRange && (
-            <div className="text-xs text-yellow-500 mt-1">
-              Raw: {position.toFixed(1)}%
+            <div className="text-base text-yellow-500 mt-3 flex items-center justify-between">
+              <span>Raw</span>
+              <span>{position.toFixed(1)}%</span>
             </div>
           )}
         </div>
