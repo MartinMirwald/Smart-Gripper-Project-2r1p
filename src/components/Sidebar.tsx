@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Home, BarChart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -57,13 +56,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
           text="Dashboard" 
           active={activePage === 'dashboard'} 
           onClick={() => onNavigate('dashboard')}
-          collapsed={collapsed}
-        />
-        <SidebarItem 
-          icon={BarChart} 
-          text="Analytics" 
-          active={activePage === 'analytics'} 
-          onClick={() => onNavigate('analytics')}
           collapsed={collapsed}
         />
       </div>

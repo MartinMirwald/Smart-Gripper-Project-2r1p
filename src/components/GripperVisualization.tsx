@@ -11,7 +11,7 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
   const openAmount = 100 - position;
   // Move fingers slightly to the right by adjusting the base positions
   const leftFingerPosition = `calc(46.55% - ${25 + openAmount/3}px)`;
-  const rightFingerPosition = `calc(45.8% + ${25 + openAmount/3}px)`;
+  const rightFingerPosition = `calc(46.3% + ${25 + openAmount/3}px)`;
   
   // Calculate color based on force
   const forceColor = force < 30 ? 'bg-blue-500' : 
@@ -85,7 +85,7 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
         <div 
           className="absolute w-10 h-28 bg-gradient-to-b from-slate-600 to-slate-700 rounded-md shadow-lg overflow-hidden"
           style={{ 
-            top: '96px',
+            top: '120px',
             left: leftFingerPosition, 
             transition: 'left 0.5s ease',
             transform: `rotate(0deg)`,
@@ -113,7 +113,7 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
         <div 
           className="absolute w-10 h-28 bg-gradient-to-b from-slate-600 to-slate-700 rounded-md shadow-lg overflow-hidden"
           style={{ 
-            top: '96px',
+            top: '120px',
             left: rightFingerPosition, 
             transition: 'left 0.5s ease',
             transform: `rotate(0deg)`,

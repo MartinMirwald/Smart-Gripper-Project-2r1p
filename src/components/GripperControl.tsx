@@ -1,139 +1,204 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { arduinoService } from '../services/ArduinoService';
 
-interface SensorData {
-  x: number;
-  y: number;
-  z: number;
-  output: number;
+interface GripperControlProps {
+  onCommand: (command: string) => void;
 }
 
-export default function GripperControl() {
+const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [sensorData, setSensorData] = useState<SensorData | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [upperLimit, setUpperLimit] = useState('6.0');
+  const [lowerLimit, setLowerLimit] = useState('0.0');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const readData = async () => {
-      if (!isConnected) return;
-      
-      try {
-        const data = await arduinoService.readData();
-        const [x, y, z, output] = data.split(',').map(Number);
-        setSensorData({ x, y, z, output });
-      } catch (err) {
-        console.error('Error reading data:', err);
-      }
-    };
-
-    const interval = setInterval(readData, 100);
-    return () => clearInterval(interval);
-  }, [isConnected]);
-
-  const handleConnect = async () => {
-    try {
-      const connected = await arduinoService.connect();
+    const unsubscribe = arduinoService.onConnectionChange((connected) => {
       setIsConnected(connected);
-      setError(null);
-    } catch (err) {
-      setError('Failed to connect to Arduino');
-      console.error(err);
-    }
-  };
-
-  const handleDisconnect = async () => {
-    await arduinoService.disconnect();
-    setIsConnected(false);
-  };
+      if (connected) {
+        const limits = arduinoService.getVoltageLimits();
+        setUpperLimit(limits.upper.toString());
+        setLowerLimit(limits.lower.toString());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleCommand = async (command: string) => {
+    if (!isConnected) {
+      return;
+    }
+    setIsLocked(true);
     try {
       await arduinoService.sendCommand(command);
-      setError(null);
-    } catch (err) {
-      setError('Failed to send command');
-      console.error(err);
+      onCommand(command);
+    } catch (error) {
+      console.error('Error sending command:', error);
+    }
+    setIsLocked(false);
+  };
+
+  const handleVoltageLimitChange = async (type: 'upper' | 'lower', value: string) => {
+    if (!isConnected) return;
+    
+    // Update the display value immediately
+    if (type === 'upper') {
+      setUpperLimit(value);
+    } else {
+      setLowerLimit(value);
+    }
+
+    // Try to parse the values
+    const upperNum = parseFloat(type === 'upper' ? value : upperLimit);
+    const lowerNum = parseFloat(type === 'lower' ? value : lowerLimit);
+
+    // Only update Arduino if both values are valid numbers
+    if (!isNaN(upperNum) && !isNaN(lowerNum)) {
+      try {
+        if (upperNum <= lowerNum) {
+          setError('Upper limit must be greater than lower limit');
+          return;
+        }
+        
+        await arduinoService.setVoltageLimits(upperNum, lowerNum);
+        setError(null);
+      } catch (error) {
+        setError('Failed to update voltage limits');
+        console.error('Error updating voltage limits:', error);
+      }
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-blue-400">Gripper Control</h2>
-        <div className="flex items-center gap-4">
-          {!isConnected ? (
-            <button
-              onClick={handleConnect}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              Connect
-            </button>
-          ) : (
-            <button
-              onClick={handleDisconnect}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-            >
-              Disconnect
-            </button>
-          )}
+    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-6 border border-blue-400/20">
+      <div className="flex flex-col gap-6">
+        <div className="flex justify-center gap-6">
+          <button
+            onClick={() => handleCommand('open')}
+            disabled={!isConnected || isLocked}
+            className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 ${
+              isConnected && !isLocked
+                ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            Open
+          </button>
+          <button
+            onClick={() => handleCommand('close')}
+            disabled={!isConnected || isLocked}
+            className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 ${
+              isConnected && !isLocked
+                ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            Close
+          </button>
+          <button
+            onClick={() => handleCommand('hold')}
+            disabled={!isConnected || isLocked}
+            className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 ${
+              isConnected && !isLocked
+                ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            Hold
+          </button>
         </div>
-      </div>
 
-      {error && (
-        <div className="p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-200">
-          {error}
-        </div>
-      )}
+        {!isConnected && (
+          <div className="text-center text-sm text-red-400">
+            Please connect to Arduino to use controls
+          </div>
+        )}
 
-      <div className="grid grid-cols-3 gap-4">
-        <button
-          onClick={() => handleCommand('open')}
-          disabled={!isConnected}
-          className="p-4 bg-green-500/20 border border-green-500 rounded-lg hover:bg-green-500/30 transition-colors disabled:opacity-50"
-        >
-          Open Gripper
-        </button>
-        <button
-          onClick={() => handleCommand('close')}
-          disabled={!isConnected}
-          className="p-4 bg-red-500/20 border border-red-500 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50"
-        >
-          Close Gripper
-        </button>
-        <button
-          onClick={() => handleCommand('hold')}
-          disabled={!isConnected}
-          className="p-4 bg-blue-500/20 border border-blue-500 rounded-lg hover:bg-blue-500/30 transition-colors disabled:opacity-50"
-        >
-          Hold Position
-        </button>
-      </div>
+        {error && (
+          <div className="text-center text-sm text-red-400">
+            {error}
+          </div>
+        )}
 
-      {sensorData && (
-        <div className="grid grid-cols-2 gap-4 p-4 bg-slate-800/50 rounded-lg">
-          <div>
-            <h3 className="text-lg font-semibold text-blue-400 mb-2">Magnetic Field</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>X:</span>
-                <span>{sensorData.x.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Y:</span>
-                <span>{sensorData.y.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Z:</span>
-                <span>{sensorData.z.toFixed(2)}</span>
+        <div className="grid grid-cols-2 gap-6 mt-2">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-blue-300">Upper Voltage Limit (V)</label>
+            <div className="relative">
+              <input
+                type="number"
+                value={upperLimit}
+                onChange={(e) => handleVoltageLimitChange('upper', e.target.value)}
+                className={`bg-slate-700 border border-blue-500/30 rounded-lg px-4 py-3 text-lg text-white focus:outline-none focus:border-blue-500 w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                  !isConnected ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                disabled={!isConnected}
+                step="0.1"
+                min="0"
+                max="12"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
+                <button
+                  onClick={() => handleVoltageLimitChange('upper', (parseFloat(upperLimit) + 0.1).toFixed(1))}
+                  disabled={!isConnected || parseFloat(upperLimit) >= 12}
+                  className={`text-blue-400 hover:text-blue-300 transition-colors ${
+                    !isConnected ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
+                  } ${parseFloat(upperLimit) >= 12 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                >
+                  ▲
+                </button>
+                <button
+                  onClick={() => handleVoltageLimitChange('upper', (parseFloat(upperLimit) - 0.1).toFixed(1))}
+                  disabled={!isConnected || parseFloat(upperLimit) <= 0}
+                  className={`text-blue-400 hover:text-blue-300 transition-colors ${
+                    !isConnected ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
+                  } ${parseFloat(upperLimit) <= 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                >
+                  ▼
+                </button>
               </div>
             </div>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-blue-400 mb-2">Output</h3>
-            <div className="text-2xl font-bold">{sensorData.output.toFixed(2)}</div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-blue-300">Lower Voltage Limit (V)</label>
+            <div className="relative">
+              <input
+                type="number"
+                value={lowerLimit}
+                onChange={(e) => handleVoltageLimitChange('lower', e.target.value)}
+                className={`bg-slate-700 border border-blue-500/30 rounded-lg px-4 py-3 text-lg text-white focus:outline-none focus:border-blue-500 w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                  !isConnected ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+                disabled={!isConnected}
+                step="0.1"
+                min="0"
+                max="12"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
+                <button
+                  onClick={() => handleVoltageLimitChange('lower', (parseFloat(lowerLimit) + 0.1).toFixed(1))}
+                  disabled={!isConnected || parseFloat(lowerLimit) >= 12}
+                  className={`text-blue-400 hover:text-blue-300 transition-colors ${
+                    !isConnected ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
+                  } ${parseFloat(lowerLimit) >= 12 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                >
+                  ▲
+                </button>
+                <button
+                  onClick={() => handleVoltageLimitChange('lower', (parseFloat(lowerLimit) - 0.1).toFixed(1))}
+                  disabled={!isConnected || parseFloat(lowerLimit) <= 0}
+                  className={`text-blue-400 hover:text-blue-300 transition-colors ${
+                    !isConnected ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
+                  } ${parseFloat(lowerLimit) <= 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
-} 
+};
+
+export default GripperControl; 
