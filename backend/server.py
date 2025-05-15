@@ -237,6 +237,26 @@ async def set_position(position: int):
         return {"status": "error", "message": "Failed to set position"}
     return {"status": "error", "message": "Arduino not connected"}
 
+@app.post("/voltage-limits")
+async def set_voltage_limits(limits: Dict[str, float]):
+    """Set the upper and lower voltage limits for the gripper"""
+    if not arduino_conn.is_connected:
+        return {"status": "error", "message": "Arduino not connected"}
+    
+    upper = limits.get("upper")
+    lower = limits.get("lower")
+    
+    if upper is None or lower is None:
+        return {"status": "error", "message": "Both upper and lower limits are required"}
+    
+    if not 0 <= lower <= upper <= 12:
+        return {"status": "error", "message": "Invalid voltage limits. Must be between 0 and 12V, and lower limit must be less than upper limit"}
+    
+    # Send commands to Arduino
+    if arduino_conn.write_command(f"upperlimit {upper}") and arduino_conn.write_command(f"lowerlimit {lower}"):
+        return {"status": "success", "message": f"Voltage limits set to {lower}V - {upper}V"}
+    return {"status": "error", "message": "Failed to set voltage limits"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000) 
