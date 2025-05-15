@@ -18,7 +18,7 @@
  * This is a basic example; you can be creative to improve this gripper!
  */
 
- //TEST
+//TEST
 #include "TLE5012Sensor.h"
 #include "TLx493D_inc.hpp"
 #include "config.h"
@@ -34,6 +34,11 @@
 bool open = false;
 bool close = false;
 bool hold = true;
+float distance = 0;
+float upper_voltage_limit = -5;
+float lower_voltage_limit = 5;
+double x, y, z;
+float output=0;
 
 //PID parameters for constant force gripping
 float Kp = 1.25;
@@ -100,9 +105,9 @@ void setup() {
   // use monitoring with serial
   Serial.begin(115200);
   while (!Serial) {
-    ; // Wait for serial port to connect. Needed for native USB port only
+    ;  // Wait for serial port to connect. Needed for native USB port only
   }
-  
+
   // enable more verbose output for debugging
   // comment out if not needed
   SimpleFOCDebug::enable(&Serial);
@@ -160,7 +165,7 @@ void setup() {
   Serial.println(F("- close: Close gripper"));
   Serial.println(F("- hold: Hold current position"));
   Serial.println(F("- PING: Test connection"));
-  
+
   _delay(1000);
 }
 
@@ -170,7 +175,7 @@ void loop() {
 #if ENABLE_MAGNETIC_SENSOR
 
   // read the magnetic field data
-  double x, y, z;
+
   dut.setSensitivity(TLx493D_FULL_RANGE_e);
   dut.getMagneticField(&x, &y, &z);
 
@@ -179,51 +184,21 @@ void loop() {
   y -= yOffset;
   z -= zOffset;
 
-  float output = computePIDOutput(z);
+  output = computePIDOutput(z);
 
 
   //read buttons decide open close hold state
   if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
-    open = false;
-    close = false;
-    hold = true;
+    holdgripper();
     delay(1000);
   } else if (digitalRead(BUTTON1) == LOW) {
-    open = false;
-    close = true;
-    hold = false;  // PID macht Kraftregelung für close
+    closegripper();  // PID macht Kraftregelung für close
   } else if (digitalRead(BUTTON2) == LOW) {
-    open = true;
-    close = false;
-    hold = false;
+    opengripper();
   }
 
-  // act according to open close hold state
-  if (close) {
 
-    target_voltage = -5;//output;  // PID macht Kraftregelung für close
-    //Serial.println("close");
-
-  } else if (open) {
-    output = 6;
-    target_voltage = 5;  // open gripper
-    //Serial.println("open");
-  } else if (hold) {
-    output =0;
-    target_voltage = 0;
-    //Serial.println("hold");
-  }
-  // print the magnetic field data
-  Serial.print(x);
-  Serial.print(",");
-
-  Serial.print(y);
-  Serial.print(",");
-
-  Serial.print(z);
-  Serial.print(",");
-  Serial.print(output);
-  Serial.println("");
+  sendStates();
 #endif
 
   //martin code
@@ -319,15 +294,15 @@ void checkSerialInput() {
   if (Serial.available() > 0) {
     String input = Serial.readStringUntil('\n');
     input.trim();  // Remove any whitespace
-    
+
     if (input.startsWith("position ")) {
       // Extract position value
       String posStr = input.substring(9);
       float position = posStr.toFloat();
-      
+
       // Convert position (0-100) to voltage (0-6V)
       float voltage = (position / 100.0) * 6.0;
-      
+
       // Set target voltage
       target_voltage = voltage;
       Serial.print("Setting position to: ");
@@ -335,26 +310,54 @@ void checkSerialInput() {
       Serial.print("% (");
       Serial.print(voltage);
       Serial.println("V)");
-    }
-    else if (input == "open") {
-      target_voltage = 0.0;  // 0V for open position
+    } else if (input == "open") {
+      opengripper();  // open
       Serial.println("Opening gripper");
-    }
-    else if (input == "close") {
-      target_voltage = 6.0;  // 6V for closed position
+    } else if (input == "close") {
+      closegripper();  //  for closed position
       Serial.println("Closing gripper");
-    }
-    else if (input == "hold") {
-      // Keep current voltage
+    } else if (input == "hold") {
+      holdgripper();  // Keep current voltage
       Serial.println("Holding current position");
-    }
-    else if (input == "PING") {
+    } else if (input == "PING") {
       Serial.println("PONG");
-    }
-    else {
+    } else if (input.startsWith("upperlimit ")) {
+      String posStr = input.substring(12);
+      upper_voltage_limit = posStr.toFloat();
+
+    } else if (input.startsWith("lowerlimit ")) {
+      String posStr = input.substring(12);
+      lower_voltage_limit = posStr.toFloat();
+
+    } else {
       Serial.print("Unknown command: ");
       Serial.println(input);
       Serial.println("Available commands: position <value>, open, close, hold, PING");
     }
   }
+}
+
+void opengripper() {
+  target_voltage = lower_voltage_limit;
+}
+
+void closegripper() {
+  target_voltage = upper_voltage_limit;
+}
+
+void holdgripper() {
+  target_voltage = 0;
+}
+void sendStates() {
+  // print the magnetic field data
+  Serial.print(x);
+  Serial.print(",");
+
+  Serial.print(y);
+  Serial.print(",");
+
+  Serial.print(z);
+  Serial.print(",");
+  Serial.print(output);
+  Serial.println("");
 }
