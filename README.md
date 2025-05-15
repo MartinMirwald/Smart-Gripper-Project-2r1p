@@ -1,6 +1,6 @@
 # Smart Gripper Project - Team 2r1p 🤖
 
-![Luke Skywalker Hand](img/lukehand.png)
+![Luke Skywalker Hand](img/lukehand.jpg)
 
 ## Project Overview
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
