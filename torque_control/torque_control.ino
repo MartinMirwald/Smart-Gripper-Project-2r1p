@@ -23,6 +23,12 @@
 #include "TLx493D_inc.hpp"
 #include "config.h"
 #include <SimpleFOC.h>
+#include <tlx5012-arduino.hpp>
+
+using namespace tle5012;
+
+Tle5012Ino Tle5012Sensor = Tle5012Ino();
+errorTypes checkError = NO_ERROR;
 
 // define SPI pins for TLE5012 sensor
 #define PIN_SPI1_SS0 94   // Chip Select (CS) pin
@@ -278,8 +284,9 @@ float computePIDOutput(float current_force) {
 
 float getDistance() {
   double d = 0.0;
-  //Tle5012Sensor.getAngleValue(d);
-  // d=d/360;
+  d=motor.sensor->getAngle();
+  //d=tle5012Sensor.getAngle();
+  //d=d/(2*PI*30);
   Serial.println(d);
 
   //30 rad von zu bis offen
@@ -351,6 +358,10 @@ void opengripper() {
 }
 
 void closegripper() {
+  if(true)
+  {
+    motor.controller = MotionControlType::torque;
+  }
   if (abs(y) > abs(forcethreshhold)) {  //z < forcethreshhold) {
     target_voltage = 0;
     //output = -3;
@@ -380,6 +391,7 @@ void sendStates() {
   Serial.print(output);
 
   Serial.print(",");
-  Serial.print(distance);
+  getDistance();
+  Serial.print(1);//distance);
   Serial.println("");
 }
