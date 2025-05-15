@@ -1,14 +1,13 @@
-
 import React from 'react';
 
 interface GripperVisualizationProps {
-  position: number; // 0-100 where 0 is fully open and 100 is fully closed
+  position: number; // 0-100 where 0 is fully closed and 100 is fully open
   force: number; // 0-100 percentage of maximum force
 }
 
 const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, force }) => {
   // Calculate gripper position for visualization
-  const openAmount = 100 - position;
+  const openAmount = position; // No inversion needed - Arduino sends 0=closed, 100=open
   // Move fingers slightly to the right by adjusting the base positions
   const leftFingerPosition = `calc(46.55% - ${25 + openAmount/3}px)`;
   const rightFingerPosition = `calc(46.3% + ${25 + openAmount/3}px)`;
@@ -19,7 +18,7 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
                     'bg-red-500';
   
   // Calculate distance between fingers
-  const distanceMm = Math.max(5, Math.round((100 - position) * 0.5));
+  const distanceMm = Math.max(5, Math.round(position * 0.5));
   
   return (
     <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg shadow-lg p-4 h-full border border-blue-500/30 shadow-blue-500/10">
@@ -155,7 +154,7 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
         {/* Position and distance indicator */}
         <div className="absolute bottom-3 right-3 bg-slate-900/90 p-2 rounded-md shadow-lg backdrop-blur-sm border border-blue-400/20 z-10">
           <div className="text-xs font-medium text-blue-400">Position</div>
-          <div className="text-right font-bold text-xs text-blue-300">{position}%</div>
+          <div className="text-right font-bold text-xs text-blue-300">{Math.round(position)}%</div>
           <div className="text-xs text-blue-400 mt-1">Distance: {distanceMm}mm</div>
         </div>
       </div>
