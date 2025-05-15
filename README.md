@@ -135,6 +135,9 @@ Our team has developed an advanced smart gripper system that combines precise co
       ```bash
    npm run dev
    ```
+## Frontend Showcase
+
+![Frontend preview](img/frontend.png)
 
 ## Contributing
 We welcome contributions to improve the project. Please read our contributing guidelines for details.
