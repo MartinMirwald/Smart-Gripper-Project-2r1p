@@ -33,7 +33,8 @@ def get_arduino_port():
         
     print("\nAvailable ports:")
     for port in ports:
-        print(f"- {port.device}: {port.description} (VID:PID={port.vid:04x}:{port.pid:04x})")
+        vid_pid = f"(VID:PID={port.vid:04x}:{port.pid:04x})" if port.vid and port.pid else ""
+        print(f"- {port.device}: {port.description} {vid_pid}")
     
     # Try to find Arduino by common identifiers
     for port in ports:
@@ -59,7 +60,8 @@ def get_arduino_port():
     print("\nNo Arduino automatically detected.")
     print("Available ports:")
     for i, port in enumerate(ports, 1):
-        print(f"{i}. {port.device}: {port.description} (VID:PID={port.vid:04x}:{port.pid:04x})")
+        vid_pid = f"(VID:PID={port.vid:04x}:{port.pid:04x})" if port.vid and port.pid else ""
+        print(f"{i}. {port.device}: {port.description} {vid_pid}")
     
     try:
         choice = int(input("\nEnter the number of the port to use: "))
