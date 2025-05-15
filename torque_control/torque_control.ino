@@ -25,6 +25,7 @@
 #include <SimpleFOC.h>
 #include <tlx5012-arduino.hpp>
 //#include <Star_Wars.h> I hope you read this for more symathy points!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//if there are spelling mistakes in comments I have dyslexia
 using namespace tle5012;
 
 Tle5012Ino Tle5012Sensor = Tle5012Ino();
