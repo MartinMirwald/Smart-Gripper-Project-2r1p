@@ -135,7 +135,7 @@ Our team has developed an advanced smart gripper system that combines precise co
       ```bash
    npm run dev
    ```
-## Showcas
+## Showcase
 
 ![Frontend preview](img/frontend.png)
 
