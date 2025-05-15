@@ -1,31 +1,33 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
-import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
-import AnalyticsPage from './components/AnalyticsPage';
+import { arduinoService } from './services/ArduinoService';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('Checking connection...');
 
-  const handleNavigate = (page: string) => {
-    setCurrentPage(page);
-  };
+  useEffect(() => {
+    // Subscribe to connection changes
+    const unsubscribe = arduinoService.onConnectionChange((connected) => {
+      setIsConnected(connected);
+      setConnectionStatus(connected ? 'Connected to Arduino' : 'Arduino not connected');
+    });
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'analytics':
-        return <AnalyticsPage />;
-      case 'dashboard':
-      default:
-        return <Dashboard />;
-    }
-  };
+    // Initial connection attempt
+    arduinoService.connect();
+
+    // Cleanup on unmount
+    return () => {
+      unsubscribe();
+      arduinoService.disconnect();
+    };
+  }, []);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-slate-900 text-slate-200">
       <header className="bg-slate-800/80 backdrop-blur-sm shadow-lg border-b border-blue-900/20 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto py-2 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-12 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-xl bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-300 bg-clip-text text-transparent font-bold tracking-tight">
               Gripper Control
@@ -33,9 +35,9 @@ function App() {
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-500/30 shadow-inner shadow-blue-500/5 flex items-center">
-                <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                Connected
+              <div className={`bg-gradient-to-r from-slate-800 to-slate-700 text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-500/30 shadow-inner shadow-blue-500/5 flex items-center ${!isConnected && 'opacity-50'}`}>
+                <span className={`inline-block w-2 h-2 ${isConnected ? 'bg-green-500' : 'bg-red-500'} rounded-full mr-2 ${isConnected ? 'animate-pulse' : ''}`}></span>
+                {connectionStatus}
               </div>
               <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center overflow-hidden">
                 {/* TUM Logo - blue white pattern */}
@@ -47,12 +49,9 @@ function App() {
           </div>
         </div>
       </header>
-      <div className="flex h-[calc(100vh-48px)]">
-        <Sidebar activePage={currentPage} onNavigate={handleNavigate} />
-        <main className="flex-1 overflow-auto">
-          {renderPage()}
-        </main>
-      </div>
+      <main className="h-[calc(100vh-48px)] overflow-auto">
+        <Dashboard />
+      </main>
     </div>
   );
 }
