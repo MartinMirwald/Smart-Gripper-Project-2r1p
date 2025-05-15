@@ -1,0 +1,98 @@
+
+/* App-specific styles */
+
+.gripper-control-app {
+  @apply text-gray-900;
+}
+
+.header-container {
+  @apply bg-gradient-to-r from-primary to-primary-dark text-white shadow-lg py-4;
+}
+
+.sidebar-container {
+  @apply bg-white shadow-md border-r border-gray-200 transition-all duration-300 min-h-screen;
+}
+
+.dashboard-container {
+  @apply bg-background p-6;
+}
+
+.panel {
+  @apply card;
+}
+
+/* Status indicators */
+.status-indicator {
+  @apply flex items-center gap-2 p-3 rounded-md;
+}
+
+.status-value {
+  @apply text-xl font-bold;
+}
+
+/* Animation utilities */
+.slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Hover effects */
+.hover-scale {
+  @apply transition-transform duration-200;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Enhanced status items */
+.status-item {
+  @apply border rounded-lg p-4 transition-all hover:bg-gray-50 hover:shadow-md;
+}
+
+.status-indicator-dot {
+  @apply w-3 h-3 rounded-full transition-colors;
+}
+
+/* Enhance gripper visualization */
+.gripper-visualization {
+  @apply bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-md p-6 h-full;
+}
+
+.gripper-base {
+  @apply bg-gray-300 rounded-t-lg shadow-inner;
+}
+
+.gripper-finger {
+  @apply bg-gradient-to-b from-blue-500 to-blue-600 rounded-t-md shadow-md;
+}
+
+/* Force indicator */
+.force-indicator {
+  @apply bg-white/90 p-2 rounded-md shadow-sm backdrop-blur-sm;
+}
+
+.force-bar {
+  @apply bg-gray-200 rounded-full h-2.5 mt-1 overflow-hidden;
+}
+
+.force-value {
+  @apply bg-green-600 h-2.5 rounded-full transition-all duration-300;
+}
+
+/* Enhance controls */
+.control-container {
+  @apply p-6 bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-md h-full;
+}
+
+.control-label {
+  @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.control-range {
+  @apply mb-6;
+}
