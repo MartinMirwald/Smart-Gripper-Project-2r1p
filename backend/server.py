@@ -55,7 +55,22 @@ class ArduinoConnection:
         if not self.is_connected or not self.serial.is_open:
             return None
         try:
-            data = self.serial.readline().decode().strip()
+            # Read raw bytes first
+            raw_data = self.serial.readline()
+            if not raw_data:
+                return None
+                
+            try:
+                # Try UTF-8 first
+                data = raw_data.decode('utf-8').strip()
+            except UnicodeDecodeError:
+                try:
+                    # Fallback to latin-1 which can handle any byte value
+                    data = raw_data.decode('latin-1').strip()
+                except Exception as e:
+                    print(f"Error decoding data: {e}")
+                    return None
+                    
             if data:
                 self.last_read_time = time.time()
             return data
@@ -174,6 +189,7 @@ async def shutdown_event():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     active_connections.append(websocket)
+    print("connection open")
     try:
         while True:
             if arduino_conn.is_connected:
@@ -182,17 +198,29 @@ async def websocket_endpoint(websocket: WebSocket):
                     try:
                         # Try to parse as sensor data (CSV format)
                         if ',' in data:
-                            x, y, z, output = map(float, data.split(','))
-                            response = {
-                                "type": "sensor_data",
-                                "data": {
-                                    "magneticX": x,
-                                    "magneticY": y,
-                                    "magneticZ": z,
-                                    "output": output
-                                }
-                            }
-                            await websocket.send_json(response)
+                            values = data.split(',')
+                            if len(values) >= 5:  # Make sure we have all expected values
+                                try:
+                                    x = float(values[0])
+                                    y = float(values[1])
+                                    z = float(values[2])
+                                    output = float(values[3])
+                                    distance = float(values[4])
+                                    
+                                    response = {
+                                        "type": "sensor_data",
+                                        "data": {
+                                            "magneticX": x,
+                                            "magneticY": y,
+                                            "magneticZ": z,
+                                            "output": output,
+                                            "distance": distance
+                                        }
+                                    }
+                                    await websocket.send_json(response)
+                                except (ValueError, IndexError) as e:
+                                    print(f"Error parsing sensor values: {e}")
+                                    continue
                         else:
                             # Handle command responses
                             response = {
@@ -200,20 +228,18 @@ async def websocket_endpoint(websocket: WebSocket):
                                 "data": data
                             }
                             await websocket.send_json(response)
-                    except ValueError:
-                        # If parsing fails, send as raw message
-                        response = {
-                            "type": "raw_message",
-                            "data": data
-                        }
-                        await websocket.send_json(response)
-            await asyncio.sleep(0.1)  # 100ms delay
+                    except Exception as e:
+                        print(f"Error processing data: {e}")
+                        continue
+            await asyncio.sleep(0.01)  # Small delay to prevent CPU overuse
     except WebSocketDisconnect:
-        print("WebSocket client disconnected")
+        print("connection closed")
+        if websocket in active_connections:
+            active_connections.remove(websocket)
     except Exception as e:
         print(f"WebSocket error: {e}")
-    finally:
-        active_connections.remove(websocket)
+        if websocket in active_connections:
+            active_connections.remove(websocket)
 
 @app.post("/command/{cmd}")
 async def send_command(cmd: str):
