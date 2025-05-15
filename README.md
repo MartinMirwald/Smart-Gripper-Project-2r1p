@@ -21,6 +21,8 @@ Our team has developed an advanced smart gripper system that combines precise co
 - **Data Analytics**: Comprehensive data logging and analysis tools
 - **Responsive Design**: Modern, user-friendly web interface
 
+  ![lightsaber](https://github.com/user-attachments/assets/099a09a6-a395-4713-8fd6-07738a3abfc2) 
+
 ### 3. Technical Innovations
 
 #### Control System
@@ -64,6 +66,8 @@ Our team has developed an advanced smart gripper system that combines precise co
    - Object property detection
    - Material classification
    - Force profile optimization
+  
+![baby-grogu](https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7)
 
 ## Development Process
 
@@ -154,5 +158,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Special thanks to R2‑D2 for compliant beep‑boop translations.
 
 ![r2d2](https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33)
-![lightsaber](https://github.com/user-attachments/assets/099a09a6-a395-4713-8fd6-07738a3abfc2) 
-![baby-grogu](https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7)
