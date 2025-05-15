@@ -113,10 +113,15 @@ void setup() {
   // comment out if not needed
   SimpleFOCDebug::enable(&Serial);
 
+  Serial.println("Starting setup...");
+
   // initialise magnetic sensor hardware
   tle5012Sensor.init();
+  Serial.println("TLE5012 sensor initialized");
+  
   // link the motor to the sensor
   motor.linkSensor(&tle5012Sensor);
+  Serial.println("Motor linked to sensor");
 
   // power supply voltage
   driver.voltage_power_supply = 12;
@@ -128,8 +133,11 @@ void setup() {
     Serial.println("Driver init failed!");
     return;
   }
+  Serial.println("Driver initialized");
+  
   // link the motor and the driver
   motor.linkDriver(&driver);
+  Serial.println("Motor linked to driver");
 
   // aligning voltage
   motor.voltage_sensor_align = 4;
@@ -143,20 +151,26 @@ void setup() {
 
   // initialize motor
   motor.init();
+  Serial.println("Motor initialized");
+  
   // align sensor and start FOC
   motor.initFOC();
+  Serial.println("FOC initialized");
   Serial.println(F("Motor ready."));
 
 #if ENABLE_MAGNETIC_SENSOR
   // start 3D magnetic sensor
   dut.begin();
+  Serial.println("3D magnetic sensor started");
+  
   // calibrate 3D magnetic sensor to get the offsets
   calibrateSensor();
-  Serial.println("3D magnetic sensor Calibration completed.");
+  Serial.println("3D magnetic sensor Calibration completed");
 
   // set the pin modes for buttons
   pinMode(BUTTON1, INPUT);
   pinMode(BUTTON2, INPUT);
+  Serial.println("Buttons initialized");
 #endif
 
   Serial.println(F("Arduino ready for commands."));
@@ -174,9 +188,7 @@ void loop() {
   checkSerialInput();
 
 #if ENABLE_MAGNETIC_SENSOR
-
   // read the magnetic field data
-
   dut.setSensitivity(TLx493D_FULL_RANGE_e);
   dut.getMagneticField(&x, &y, &z);
 
@@ -186,7 +198,6 @@ void loop() {
   z -= zOffset;
 
   output = computePIDOutput(z);
-
 
   //read buttons decide open close hold state
   if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
@@ -198,35 +209,18 @@ void loop() {
     opengripper();
   }
 
-
   sendStates();
+  Serial.println("Data sent"); // Debug message
 #endif
-
-  //martin code
-  //getDistance();
-
-
-
 
   // update angle sensor data
   tle5012Sensor.update();
   motor.move(target_voltage);
 
-//end martin code
-#if ENABLE_READ_ANGLE
-  Serial.print(tle5012Sensor.getSensorAngle());
-  Serial.println("");
-#endif
   // main FOC algorithm function
-  // the faster you run this function the better
-  // Arduino UNO loop  ~1kHz
-  // Bluepill loop ~10kHz
   motor.loopFOC();
 
   // Motion control function
-  // velocity, position or voltage (defined in motor.controller)
-  // this function can be run at much lower frequency than loopFOC() function
-  // You can also use motor.move() and set the motor.target in the code
   motor.move(target_voltage);
 #if ENABLE_COMMANDER
   // user communication

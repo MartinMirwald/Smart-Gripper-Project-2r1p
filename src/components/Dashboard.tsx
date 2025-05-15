@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { arduinoService } from '../services/ArduinoService';
+import { arduinoService, SensorData } from '../services/ArduinoService';
 import GripperVisualization from './GripperVisualization';
 import StatusDisplay from './StatusDisplay';
 import GripperControl from './GripperControl';
@@ -42,35 +42,49 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (!isConnected) return;
 
-    const unsubscribe = arduinoService.onData((newData) => {
-      setData(prevData => {
-        const newPoint: DataPoint = {
-          time: '0s ago',
-          ...newData
-        };
-        
-        // Update status data with latest readings
-        setStatusData(prev => ({
-          ...prev,
-          torque: Math.abs(newData.magneticZ) * 0.1, // Convert magnetic reading to torque
-          temperature: 25 + (Math.abs(newData.magneticX) * 0.5), // Simulate temperature based on magnetic activity
-          voltage: newData.output,
-          connected: true
-        }));
-        
-        // Shift all times one second older
-        const updatedData = prevData.map((point, i) => ({
-          ...point,
-          time: `${i + 1}s ago`
-        }));
-        
-        // Add new point and remove oldest if more than 20 points
-        return [newPoint, ...updatedData.slice(0, 19)];
-      });
+    const unsubscribe = arduinoService.onData((message) => {
+      if (message.type === 'sensor_data' && typeof message.data !== 'string') {
+        const sensorData = message.data as SensorData;
+        setData(prevData => {
+          const newPoint: DataPoint = {
+            time: '0s ago',
+            magneticX: sensorData.magneticX,
+            magneticY: sensorData.magneticY,
+            magneticZ: sensorData.magneticZ,
+            output: sensorData.output
+          };
+          
+          // Update status data with latest readings
+          setStatusData(prev => ({
+            ...prev,
+            torque: Math.abs(sensorData.magneticZ) * 0.1, // Convert magnetic reading to torque
+            temperature: 25 + (Math.abs(sensorData.magneticX) * 0.5), // Simulate temperature based on magnetic activity
+            voltage: sensorData.output,
+            connected: true
+          }));
+          
+          // Shift all times one second older
+          const updatedData = prevData.map((point, i) => ({
+            ...point,
+            time: `${i + 1}s ago`
+          }));
+          
+          // Add new point and remove oldest if more than 20 points
+          return [newPoint, ...updatedData.slice(0, 19)];
+        });
+      }
     });
 
     return () => unsubscribe();
   }, [isConnected]);
+
+  const handleCommand = async (command: string) => {
+    try {
+      await arduinoService.sendCommand(command);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to send command');
+    }
+  };
 
   return (
     <div className="p-6 bg-slate-900 min-h-screen">
@@ -85,7 +99,7 @@ const Dashboard: React.FC = () => {
           <GripperVisualization position={50} force={0} />
         </div>
         <div className="w-full space-y-6">
-          <GripperControl />
+          <GripperControl onCommand={handleCommand} />
         </div>
       </div>
       
@@ -220,7 +234,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-3 border border-blue-400/20">
           <h4 className="text-xs text-blue-300 mb-1">Current Output</h4>
           <div className="text-lg font-bold text-white">
-            {data.length > 0 ? data[0].output.toFixed(2) : 0}V
+            {data.length > 0 && data[0].output !== undefined ? data[0].output.toFixed(2) : 0}V
           </div>
         </div>
       </div>
