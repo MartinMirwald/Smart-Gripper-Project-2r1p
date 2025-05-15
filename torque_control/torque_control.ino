@@ -45,7 +45,7 @@ float upper_voltage_limit = -5;
 float lower_voltage_limit = 5;
 double x, y, z;
 float output = 0;
-double forcethreshhold = 0.4;
+double forcethreshhold = 2;
 
 //PID parameters for constant force gripping
 float Kp = 1.25;
@@ -192,7 +192,12 @@ void setup() {
 
 void loop() {
   checkSerialInput();
-
+if (abs(y)+abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
+    target_voltage = 0;
+    output = -3;
+    //distance = 10;
+    //return;
+  }
 #if ENABLE_MAGNETIC_SENSOR
   // read the magnetic field data
   dut.setSensitivity(TLx493D_FULL_RANGE_e);
@@ -351,7 +356,7 @@ void opengripper() {
   }
   if (true) {
     motor.controller = MotionControlType::angle_openloop;
-    motor.move(80);
+    motor.move(90);
     output = 0;
     target_voltage = 0;
     distance = 100;
@@ -363,15 +368,16 @@ void closegripper() {
   {
     motor.controller = MotionControlType::torque;
   }
-  if (abs(y) > abs(forcethreshhold)) {  //z < forcethreshhold) {
+  if (abs(y)+abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
     target_voltage = 0;
     //output = -3;
-    distance = 10;
-    return;
-  }
+    //distance = 10;
+    //return;
+  }else{
   distance = 0;
   // output=upper_voltage_limit;
   target_voltage = upper_voltage_limit;  //computePIDOutput(z);
+  }
 }
 
 void holdgripper() {
