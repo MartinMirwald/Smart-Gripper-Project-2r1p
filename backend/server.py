@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import serial
 import asyncio
@@ -6,6 +6,7 @@ import json
 from typing import List, Dict
 import serial.tools.list_ports
 import sys
+import time
 
 app = FastAPI()
 
@@ -21,6 +22,8 @@ app.add_middleware(
 # Store active connections
 active_connections: List[WebSocket] = []
 arduino = None
+last_arduino_read_time = 0
+ARDUINO_TIMEOUT = 5  # seconds
 
 def get_arduino_port():
     """Find the Arduino port automatically"""
@@ -73,6 +76,29 @@ def get_arduino_port():
         print("Invalid selection!")
     
     return None
+
+async def reconnect_arduino():
+    """Attempt to reconnect to Arduino"""
+    global arduino
+    if arduino and arduino.is_open:
+        arduino.close()
+    
+    port = get_arduino_port()
+    if port:
+        try:
+            arduino = serial.Serial(
+                port=port,
+                baudrate=115200,
+                timeout=1,
+                bytesize=serial.EIGHTBITS,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE
+            )
+            print(f"Reconnected to Arduino on {port}")
+            return True
+        except Exception as e:
+            print(f"Failed to reconnect to Arduino: {e}")
+    return False
 
 @app.on_event("startup")
 async def startup_event():
@@ -132,20 +158,31 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Read data from Arduino
                     data = arduino.readline().decode().strip()
                     if data:
-                        # Parse the CSV data
-                        x, y, z, output = map(float, data.split(','))
-                        # Create JSON response
-                        response = {
-                            "magneticX": x,
-                            "magneticY": y,
-                            "magneticZ": z,
-                            "output": output
-                        }
-                        # Send to all connected clients
-                        await websocket.send_json(response)
+                        try:
+                            # Parse the CSV data
+                            x, y, z, output = map(float, data.split(','))
+                            # Create JSON response
+                            response = {
+                                "magneticX": x,
+                                "magneticY": y,
+                                "magneticZ": z,
+                                "output": output
+                            }
+                            # Send to all connected clients
+                            await websocket.send_json(response)
+                        except ValueError:
+                            print(f"Invalid data format: {data}")
+                            continue
                 except Exception as e:
                     print(f"Error reading from Arduino: {e}")
+                    # Try to reconnect if we haven't received data for a while
+                    if time.time() - last_arduino_read_time > ARDUINO_TIMEOUT:
+                        print("Attempting to reconnect to Arduino...")
+                        if await reconnect_arduino():
+                            last_arduino_read_time = time.time()
             await asyncio.sleep(0.1)  # 100ms delay
+    except WebSocketDisconnect:
+        print("WebSocket client disconnected")
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:

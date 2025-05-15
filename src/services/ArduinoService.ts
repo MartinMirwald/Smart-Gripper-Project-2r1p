@@ -79,6 +79,18 @@ export class ArduinoService {
     }
   }
 
+  async hold() {
+    return this.sendCommand('hold');
+  }
+
+  async open() {
+    return this.sendCommand('open');
+  }
+
+  async close() {
+    return this.sendCommand('close');
+  }
+
   onData(handler: (data: any) => void) {
     this.messageHandlers.push(handler);
     return () => {

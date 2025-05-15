@@ -77,6 +77,32 @@ const AnalyticsPage: React.FC = () => {
     }
   };
 
+  const handleCommand = async (command: 'hold' | 'open' | 'close') => {
+    if (!isConnected) {
+      setError('Not connected to backend');
+      return;
+    }
+    try {
+      setIsMoving(true);
+      switch (command) {
+        case 'hold':
+          await arduinoService.hold();
+          break;
+        case 'open':
+          await arduinoService.open();
+          break;
+        case 'close':
+          await arduinoService.close();
+          break;
+      }
+    } catch (err) {
+      setError(`Failed to ${command} gripper`);
+      console.error(err);
+    } finally {
+      setIsMoving(false);
+    }
+  };
+
   return (
     <div className="p-6 bg-slate-900 min-h-screen">
       <h2 className="text-xl font-bold mb-6 text-blue-400 border-b border-blue-500/20 pb-2">Gripper Analytics</h2>
@@ -86,6 +112,36 @@ const AnalyticsPage: React.FC = () => {
           {error}
         </div>
       )}
+
+      {/* Control Buttons */}
+      <div className="mb-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-4 border border-blue-400/20">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium text-blue-400">Gripper Controls</h3>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleCommand('open')}
+              disabled={!isConnected || isMoving}
+              className="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg border border-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Open
+            </button>
+            <button
+              onClick={() => handleCommand('hold')}
+              disabled={!isConnected || isMoving}
+              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Hold
+            </button>
+            <button
+              onClick={() => handleCommand('close')}
+              disabled={!isConnected || isMoving}
+              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Position Control */}
       <div className="mb-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-4 border border-blue-400/20">
