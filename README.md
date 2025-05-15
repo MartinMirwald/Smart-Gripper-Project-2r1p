@@ -128,7 +128,13 @@ Our team has developed an advanced smart gripper system that combines precise co
    ```
 4. Upload firmware to Arduino
 5. Start the backend server
-6. Launch the frontend application
+   ```bash
+   python server.py
+   ```
+7. Launch the frontend application
+      ```bash
+   npm run dev
+   ```
 
 ## Contributing
 We welcome contributions to improve the project. Please read our contributing guidelines for details.
