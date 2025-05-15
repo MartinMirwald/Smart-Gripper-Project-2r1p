@@ -38,7 +38,8 @@ float distance = 0;
 float upper_voltage_limit = -5;
 float lower_voltage_limit = 5;
 double x, y, z;
-float output=0;
+float output = 0;
+double forcethreshhold = -1;
 
 //PID parameters for constant force gripping
 float Kp = 1.25;
@@ -338,18 +339,27 @@ void checkSerialInput() {
 }
 
 void opengripper() {
+  output= lower_voltage_limit;
   target_voltage = lower_voltage_limit;
 }
 
 void closegripper() {
-  target_voltage = upper_voltage_limit;
+  if (z < forcethreshhold) {
+    target_voltage = -3;
+    output = -3;
+    return;
+  }
+  output=upper_voltage_limit;
+  target_voltage = upper_voltage_limit;  //computePIDOutput(z);
 }
 
 void holdgripper() {
+  output = 0;
   target_voltage = 0;
 }
 void sendStates() {
   // print the magnetic field data
+  //x,y,z,output,distance,
   Serial.print(x);
   Serial.print(",");
 
