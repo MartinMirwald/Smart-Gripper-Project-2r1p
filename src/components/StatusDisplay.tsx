@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface StatusDisplayProps {
-  torque: number;
+  torque: number; // Sum of magnetic field components
   temperature: number;
   voltage: number;
   connected: boolean;
@@ -19,8 +19,8 @@ const StatusDisplay: React.FC<StatusDisplayProps> = ({ torque, temperature, volt
             </svg>
           </div>
           <div>
-            <div className="text-xs text-blue-300">Torque</div>
-            <div className="text-lg font-bold text-white">{torque.toFixed(2)} Nm</div>
+            <div className="text-xs text-blue-300">Force</div>
+            <div className="text-lg font-bold text-white">{torque.toFixed(2)} mT</div>
           </div>
         </div>
         

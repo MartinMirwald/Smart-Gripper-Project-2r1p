@@ -63,7 +63,7 @@ const Dashboard: React.FC = () => {
           // Update status data with latest readings
           setStatusData(prev => ({
             ...prev,
-            torque: Math.abs(sensorData.magneticZ) * 0.1,
+            torque: Math.abs(sensorData.magneticX + sensorData.magneticY + sensorData.magneticZ),
             temperature: 25 + (Math.abs(sensorData.magneticX) * 0.5),
             voltage: sensorData.output,
             connected: true

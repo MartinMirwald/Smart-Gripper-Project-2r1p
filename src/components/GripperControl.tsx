@@ -81,8 +81,13 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const MIN_CONFIDENCE = 0.7; // Minimum confidence threshold (70%)
-  const VALID_COMMANDS = ['open', 'close', 'hold'];
+  const MIN_CONFIDENCE = 0.6; // Lowered threshold for better recognition
+  const VALID_COMMANDS = {
+    'open': ['open', 'opening', 'open up', 'open gripper'],
+    'close': ['close', 'closing', 'close up', 'close gripper'],
+    'hold': ['hold', 'holding', 'stop', 'halt', 'freeze'],
+    'measure': ['measure', 'measuring', 'get measurement', 'take measurement']
+  };
 
   const initializeRecognition = useCallback(() => {
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
@@ -91,7 +96,7 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
       recognition.continuous = false;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
-      recognition.maxAlternatives = 3;
+      recognition.maxAlternatives = 5; // Increased alternatives for better matching
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const result = event.results[0];
@@ -101,36 +106,78 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
         setConfidence(currentConfidence);
         console.log('Recognized:', transcript, 'Confidence:', currentConfidence);
 
-        // Only process final results with high confidence
-        if (result.isFinal && currentConfidence >= MIN_CONFIDENCE) {
-          // Check if the transcript exactly matches one of the valid commands
-          const exactMatch = VALID_COMMANDS.find(cmd => transcript === cmd);
-          
-          if (exactMatch) {
-            setLastCommand(exactMatch);
+        // Only process final results
+        if (result.isFinal) {
+          // Try to find the best matching command
+          let bestMatch = null;
+          let bestConfidence = 0;
+
+          // Check each command and its variations
+          Object.entries(VALID_COMMANDS).forEach(([command, variations]) => {
+            variations.forEach(variation => {
+              // Check for exact match
+              if (transcript === variation) {
+                if (currentConfidence > bestConfidence) {
+                  bestMatch = command;
+                  bestConfidence = currentConfidence;
+                }
+              }
+              // Check for partial match
+              else if (transcript.includes(variation)) {
+                const matchConfidence = currentConfidence * 0.8; // Penalize partial matches
+                if (matchConfidence > bestConfidence) {
+                  bestMatch = command;
+                  bestConfidence = matchConfidence;
+                }
+              }
+            });
+          });
+
+          if (bestMatch && bestConfidence >= MIN_CONFIDENCE) {
+            setLastCommand(bestMatch);
             setRecognitionError(null);
             setIsProcessing(true);
             
             if (isTestMode) {
-              console.log(`Test Mode: Simulating ${exactMatch} command`);
+              console.log(`Test Mode: Simulating ${bestMatch} command`);
             } else {
-              onCommand(exactMatch);
+              onCommand(bestMatch);
             }
             
             setIsProcessing(false);
           } else {
-            setRecognitionError('Please say exactly "open", "close", or "hold"');
+            // Provide more helpful feedback
+            const suggestions = Object.values(VALID_COMMANDS).flat().join(', ');
+            setRecognitionError(`Please say one of: ${suggestions}`);
           }
-        } else if (result.isFinal) {
-          setRecognitionError('Command not clear enough. Please try again.');
         }
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error:', event.error);
-        setRecognitionError(`Voice recognition error: ${event.error}`);
+        let errorMessage = 'Voice recognition error: ';
+        
+        switch (event.error) {
+          case 'network':
+            errorMessage += 'Network error. Please check your internet connection.';
+            break;
+          case 'not-allowed':
+            errorMessage += 'Microphone access denied. Please allow microphone access.';
+            break;
+          case 'audio-capture':
+            errorMessage += 'No microphone detected. Please connect a microphone.';
+            break;
+          case 'no-speech':
+            errorMessage += 'No speech detected. Please try again.';
+            break;
+          default:
+            errorMessage += event.error;
+        }
+        
+        setRecognitionError(errorMessage);
         setIsProcessing(false);
         
+        // Auto-restart on network errors
         if (event.error === 'network') {
           setTimeout(() => {
             if (isListening) {
@@ -196,17 +243,16 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
   };
 
   const handleCommand = async (command: string) => {
-    if (!isConnected) {
-      return;
-    }
-    setIsLocked(true);
     try {
-      await arduinoService.sendCommand(command);
-      onCommand(command);
+      if (isTestMode) {
+        console.log(`Test Mode: Simulating ${command} command`);
+        return;
+      }
+      await onCommand(command);
     } catch (error) {
       console.error('Error sending command:', error);
+      setError('Failed to send command');
     }
-    setIsLocked(false);
   };
 
   const handleVoltageLimitChange = (type: 'upper' | 'lower', value: string) => {
@@ -296,7 +342,7 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-6 border border-blue-400/20">
+    <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg shadow-lg p-4 h-full border border-blue-500/30 shadow-blue-500/10">
       <div className="flex flex-col gap-6">
         {/* Test Mode Toggle */}
         <div className="flex justify-center">
@@ -325,9 +371,9 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
         <div className="flex justify-center gap-6">
           <button
             onClick={() => handleCommand('open')}
-            disabled={!isConnected && !isTestMode || isLocked}
+            disabled={isLocked}
             className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 ${
-              (isConnected || isTestMode) && !isLocked
+              !isLocked
                 ? 'bg-blue-500 hover:bg-blue-600 text-white'
                 : 'bg-slate-700 text-slate-400 cursor-not-allowed'
             }`}
@@ -336,9 +382,9 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
           </button>
           <button
             onClick={() => handleCommand('close')}
-            disabled={!isConnected && !isTestMode || isLocked}
+            disabled={isLocked}
             className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 ${
-              (isConnected || isTestMode) && !isLocked
+              !isLocked
                 ? 'bg-blue-500 hover:bg-blue-600 text-white'
                 : 'bg-slate-700 text-slate-400 cursor-not-allowed'
             }`}
@@ -347,14 +393,25 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
           </button>
           <button
             onClick={() => handleCommand('hold')}
-            disabled={!isConnected && !isTestMode || isLocked}
+            disabled={isLocked}
             className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 ${
-              (isConnected || isTestMode) && !isLocked
+              !isLocked
                 ? 'bg-blue-500 hover:bg-blue-600 text-white'
                 : 'bg-slate-700 text-slate-400 cursor-not-allowed'
             }`}
           >
             Hold
+          </button>
+          <button
+            onClick={() => handleCommand('measure')}
+            disabled={isLocked}
+            className={`px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 ${
+              !isLocked
+                ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            Measure
           </button>
         </div>
 
@@ -400,12 +457,6 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
           </div>
         )}
 
-        {!isConnected && !isTestMode && (
-          <div className="text-center text-sm text-red-400">
-            Please connect to Arduino to use controls
-          </div>
-        )}
-
         {isTestMode && (
           <div className="text-center text-sm text-blue-400">
             Test Mode Active - Commands will be logged to console
@@ -432,10 +483,7 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
                 type="number"
                 value={tempUpperLimit}
                 onChange={(e) => handleVoltageLimitChange('upper', e.target.value)}
-                className={`bg-slate-700 border border-blue-500/30 rounded-lg px-4 py-3 text-lg text-white focus:outline-none focus:border-blue-500 w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                  !isConnected && !isTestMode ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                disabled={!isConnected && !isTestMode}
+                className={`bg-slate-700 border border-blue-500/30 rounded-lg px-4 py-3 text-lg text-white focus:outline-none focus:border-blue-500 w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                 step="0.1"
                 min="0"
                 max="12"
@@ -443,19 +491,19 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
                 <button
                   onClick={() => handleVoltageLimitChange('upper', (parseFloat(tempUpperLimit) + 0.1).toFixed(1))}
-                  disabled={!isConnected && !isTestMode || parseFloat(tempUpperLimit) >= 12}
+                  disabled={parseFloat(tempUpperLimit) >= 12}
                   className={`text-blue-400 hover:text-blue-300 transition-colors ${
-                    !isConnected && !isTestMode ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
-                  } ${parseFloat(tempUpperLimit) >= 12 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    parseFloat(tempUpperLimit) >= 12 ? 'opacity-30 cursor-not-allowed' : ''
+                  }`}
                 >
                   ▲
                 </button>
                 <button
                   onClick={() => handleVoltageLimitChange('upper', (parseFloat(tempUpperLimit) - 0.1).toFixed(1))}
-                  disabled={!isConnected && !isTestMode || parseFloat(tempUpperLimit) <= 0}
+                  disabled={parseFloat(tempUpperLimit) <= 0}
                   className={`text-blue-400 hover:text-blue-300 transition-colors ${
-                    !isConnected && !isTestMode ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
-                  } ${parseFloat(tempUpperLimit) <= 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    parseFloat(tempUpperLimit) <= 0 ? 'opacity-30 cursor-not-allowed' : ''
+                  }`}
                 >
                   ▼
                 </button>
@@ -469,10 +517,7 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
                 type="number"
                 value={tempLowerLimit}
                 onChange={(e) => handleVoltageLimitChange('lower', e.target.value)}
-                className={`bg-slate-700 border border-blue-500/30 rounded-lg px-4 py-3 text-lg text-white focus:outline-none focus:border-blue-500 w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                  !isConnected && !isTestMode ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-                disabled={!isConnected && !isTestMode}
+                className={`bg-slate-700 border border-blue-500/30 rounded-lg px-4 py-3 text-lg text-white focus:outline-none focus:border-blue-500 w-full [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                 step="0.1"
                 min="-12"
                 max="0"
@@ -480,19 +525,19 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
                 <button
                   onClick={() => handleVoltageLimitChange('lower', (parseFloat(tempLowerLimit) + 0.1).toFixed(1))}
-                  disabled={!isConnected && !isTestMode || parseFloat(tempLowerLimit) >= 0}
+                  disabled={parseFloat(tempLowerLimit) >= 0}
                   className={`text-blue-400 hover:text-blue-300 transition-colors ${
-                    !isConnected && !isTestMode ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
-                  } ${parseFloat(tempLowerLimit) >= 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    parseFloat(tempLowerLimit) >= 0 ? 'opacity-30 cursor-not-allowed' : ''
+                  }`}
                 >
                   ▲
                 </button>
                 <button
                   onClick={() => handleVoltageLimitChange('lower', (parseFloat(tempLowerLimit) - 0.1).toFixed(1))}
-                  disabled={!isConnected && !isTestMode || parseFloat(tempLowerLimit) <= -12}
+                  disabled={parseFloat(tempLowerLimit) <= -12}
                   className={`text-blue-400 hover:text-blue-300 transition-colors ${
-                    !isConnected && !isTestMode ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
-                  } ${parseFloat(tempLowerLimit) <= -12 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    parseFloat(tempLowerLimit) <= -12 ? 'opacity-30 cursor-not-allowed' : ''
+                  }`}
                 >
                   ▼
                 </button>
@@ -506,9 +551,9 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
           <div className="flex justify-center gap-4 mt-2">
             <button
               onClick={saveVoltageLimits}
-              disabled={isSaving || (!isConnected && !isTestMode)}
+              disabled={isSaving}
               className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
-                isSaving || (!isConnected && !isTestMode)
+                isSaving
                   ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                   : 'bg-green-500 hover:bg-green-600 text-white'
               }`}
@@ -517,9 +562,9 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
             </button>
             <button
               onClick={resetLimits}
-              disabled={isSaving || (!isConnected && !isTestMode)}
+              disabled={isSaving}
               className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
-                isSaving || (!isConnected && !isTestMode)
+                isSaving
                   ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                   : 'bg-slate-600 hover:bg-slate-500 text-white'
               }`}

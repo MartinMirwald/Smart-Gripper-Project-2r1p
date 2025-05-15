@@ -2,7 +2,7 @@ import React from 'react';
 
 interface GripperVisualizationProps {
   position: number; // 0-100 where 0 is fully closed and 100 is fully open
-  force: number; // 0-100 percentage of maximum force
+  force: number; // Sum of magnetic field components (X + Y + Z)
 }
 
 const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, force }) => {
@@ -13,15 +13,16 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
   const openAmount = clampedPosition; // No inversion needed - Arduino sends 0=closed, 100=open
   // Move fingers slightly to the right by adjusting the base positions
   const leftFingerPosition = `calc(46.55% - ${25 + openAmount/3}px)`;
-  const rightFingerPosition = `calc(46.3% + ${25 + openAmount/3}px)`;
+  const rightFingerPosition = `calc(46.6% + ${25 + openAmount/3}px)`;
   
-  // Calculate color based on force
-  const forceColor = force < 30 ? 'bg-blue-500' : 
-                    force < 70 ? 'bg-yellow-500' : 
+  // Calculate color based on force magnitude
+  const forceMagnitude = Math.abs(force);
+  const forceColor = forceMagnitude < 30 ? 'bg-blue-500' : 
+                    forceMagnitude < 70 ? 'bg-yellow-500' : 
                     'bg-red-500';
   
-  // Calculate distance between fingers
-  const distanceMm = Math.max(5, Math.round(clampedPosition * 0.5));
+  // Calculate distance between fingers (0-90mm)
+  const distanceMm = Math.round(clampedPosition * 0.9); // 0.9mm per 1% position
   
   // Show warning if position is out of range
   const isOutOfRange = position < 0 || position > 100;
@@ -151,10 +152,10 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
           <div className="bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
             <div 
               className={`h-1.5 rounded-full ${forceColor} transition-all duration-300`}
-              style={{ width: `${force}%` }}
+              style={{ width: `${Math.min(Math.abs(force), 100)}%` }}
             ></div>
           </div>
-          <div className="text-xs text-right mt-1 font-medium text-blue-300">{force}%</div>
+          <div className="text-xs text-right mt-1 font-medium text-blue-300">{force.toFixed(1)}</div>
         </div>
         
         {/* Position and distance indicator */}
