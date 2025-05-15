@@ -37,6 +37,7 @@ errorTypes checkError = NO_ERROR;
 #define PIN_SPI1_SCK 68   // SCK pin
 
 
+//global variables for system states
 bool open = false;
 bool close = false;
 bool hold = true;
@@ -192,8 +193,10 @@ void setup() {
 }
 
 void loop() {
-  checkSerialInput();
-if (abs(y)+abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
+  checkSerialInput();  //get control signals from GUI
+
+  //smart object presence detection
+  if (abs(y) + abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
     target_voltage = 0;
     output = -3;
     //distance = 10;
@@ -209,7 +212,7 @@ if (abs(y)+abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
   y -= yOffset;
   z -= zOffset;
 
- // output = computePIDOutput(z);
+  // output = computePIDOutput(z);
 
   //read buttons decide open close hold state
   if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
@@ -267,6 +270,7 @@ void calibrateSensor() {
 }
 #endif
 
+//PID control for constant force grip
 float computePIDOutput(float current_force) {
   unsigned long now = millis();
   float dt = (now - pid_last_time) / 1000.0;
@@ -288,10 +292,11 @@ float computePIDOutput(float current_force) {
   return constrain(output, -5, 5);  // max +/- Spannung deines Motors
 }
 
+//gives the distance between gripper fingers in % (M is for Martin)
 double getDistanceM() {
   double d = 0.0;
-  d=motor.sensor->getAngle();
-  d=((19+d)/19)*100;
+  d = motor.sensor->getAngle();
+  d = ((19 + d) / 19) * 100;
   //d=tle5012Sensor.getAngle();
   //d=d/(2*PI*30);
   //Serial.println(d);
@@ -299,6 +304,8 @@ double getDistanceM() {
   //30 rad von zu bis offen
 }
 
+
+//checks for signals from GUI and changes system states
 void checkSerialInput() {
   if (Serial.available() > 0) {
     String input = Serial.readStringUntil('\n');
@@ -350,8 +357,9 @@ void checkSerialInput() {
   }
 }
 
+//as it's name implies it opens the gripper
 void opengripper() {
-  if (false) {
+  if (false) {//alternative way but not used for final version
     output = lower_voltage_limit;
     target_voltage = lower_voltage_limit;
     delay(500);
@@ -359,7 +367,7 @@ void opengripper() {
     target_voltage = 0;
     distance = 100;
   }
-  if (true) {
+  if (true) { //opens using advanced positional controll techniques and stops at a point before disengaging gears
     motor.controller = MotionControlType::angle_openloop;
     motor.move(90);
     output = 0;
@@ -368,27 +376,29 @@ void opengripper() {
   }
 }
 
+// closes gripper
 void closegripper() {
-  if(true)
-  {
-    motor.controller = MotionControlType::torque;
+  if (true) {
+    motor.controller = MotionControlType::torque;//switch to advanced torque controll technique
   }
-  if (abs(y)+abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
+  //stops at a force threshhold in order to not break objects
+  if (abs(y) + abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
     target_voltage = 0;
     //output = -3;
     //distance = 10;
     //return;
-  }else{
-  distance = 0;
-  // output=upper_voltage_limit;
-  target_voltage = upper_voltage_limit;  //computePIDOutput(z);
+  } else {
+    distance = 0;
+    // output=upper_voltage_limit;
+    target_voltage = upper_voltage_limit;  //computePIDOutput(z);//if you want to use PID ;-)
   }
 }
 
-void holdgripper() {
+void holdgripper() {//stops motors
   //output = 0;
   target_voltage = 0;
 }
+//sends all the iportant system states to the GUI for visualization
 void sendStates() {
   // print the magnetic field data
   //x,y,z,output,distance,
@@ -403,7 +413,7 @@ void sendStates() {
   Serial.print(target_voltage);
 
   Serial.print(",");
-  double d=getDistanceM();
-  Serial.print(d);//distance);
+  double d = getDistanceM();
+  Serial.print(d);  //distance);
   Serial.println("");
 }
