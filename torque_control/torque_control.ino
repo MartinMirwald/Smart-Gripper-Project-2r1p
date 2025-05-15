@@ -17,7 +17,7 @@
  *
  * This is a basic example; you can be creative to improve this gripper!
  */
-
+//hey please use robot gripper 2
 //TEST
 #include "TLE5012Sensor.h"
 #include "TLx493D_inc.hpp"
@@ -39,7 +39,7 @@ float upper_voltage_limit = -5;
 float lower_voltage_limit = 5;
 double x, y, z;
 float output = 0;
-double forcethreshhold = -1;
+double forcethreshhold = 0.4;
 
 //PID parameters for constant force gripping
 float Kp = 1.25;
@@ -338,7 +338,7 @@ void opengripper() {
 }
 
 void closegripper() {
-  if (z < forcethreshhold){//z < forcethreshhold) {
+  if (abs(y) > forcethreshhold){//z < forcethreshhold) {
     target_voltage = 0;
     //output = -3;
     return;
