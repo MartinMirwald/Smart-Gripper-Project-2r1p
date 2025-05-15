@@ -185,6 +185,7 @@ void setup() {
   Serial.println(F("- open: Open gripper"));
   Serial.println(F("- close: Close gripper"));
   Serial.println(F("- hold: Hold current position"));
+  Serial.println(F("- measure: Send current measurements"));
   Serial.println(F("- PING: Test connection"));
 
   _delay(1000);
@@ -322,6 +323,10 @@ void checkSerialInput() {
     } else if (input == "hold") {
       holdgripper();  // Keep current voltage
       Serial.println("Holding current position");
+    } else if (input == "measure") {
+      // Send current measurements
+      sendStates();
+      Serial.println("Measurement sent");
     } else if (input == "PING") {
       Serial.println("PONG");
     } else if (input.startsWith("upperlimit ")) {
@@ -335,7 +340,7 @@ void checkSerialInput() {
     } else {
       Serial.print("Unknown command: ");
       Serial.println(input);
-      Serial.println("Available commands: position <value>, open, close, hold, PING");
+      Serial.println("Available commands: position <value>, open, close, hold, measure, PING");
     }
   }
 }

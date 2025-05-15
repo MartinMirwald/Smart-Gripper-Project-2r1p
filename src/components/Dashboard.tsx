@@ -219,21 +219,21 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-3 border border-blue-400/20">
           <h4 className="text-xs text-blue-300 mb-1">Avg. Magnetic X</h4>
           <div className="text-lg font-bold text-white">
-            {data.length > 0 ? data.reduce((acc, point) => acc + point.magneticX, 0) / data.length : 0} mT
+            {data.length > 0 ? (data.reduce((acc, point) => acc + point.magneticX, 0) / data.length).toFixed(5) : 0} mT
           </div>
         </div>
         
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-3 border border-blue-400/20">
           <h4 className="text-xs text-blue-300 mb-1">Avg. Magnetic Y</h4>
           <div className="text-lg font-bold text-white">
-            {data.length > 0 ? data.reduce((acc, point) => acc + point.magneticY, 0) / data.length : 0} mT
+            {data.length > 0 ? (data.reduce((acc, point) => acc + point.magneticY, 0) / data.length).toFixed(5) : 0} mT
           </div>
         </div>
         
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-3 border border-blue-400/20">
           <h4 className="text-xs text-blue-300 mb-1">Avg. Magnetic Z</h4>
           <div className="text-lg font-bold text-white">
-            {data.length > 0 ? data.reduce((acc, point) => acc + point.magneticZ, 0) / data.length : 0} mT
+            {data.length > 0 ? (data.reduce((acc, point) => acc + point.magneticZ, 0) / data.length).toFixed(5) : 0} mT
           </div>
         </div>
         
