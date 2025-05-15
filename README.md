@@ -10,9 +10,9 @@ Our team has developed an advanced smart gripper system that combines precise co
 ## Key Features
 
 ### 1. Intelligent Control System
-- **Adaptive Force Control**: Dynamic adjustment of grip force based on object properties
+- **Adaptive Force Control**: Dynamic adjustment of grip force based on object properties like size
 - **Real-time Sensor Feedback**: Continuous monitoring using 3D magnetic sensors
-- **Smart Object Detection**: Automatic detection of object properties (hardness, size, shape)
+- **Smart Object Detection**: Automatic detection of object properties (size, shape)
 - **Voice Control Integration**: Natural language command interface
 
 ### 2. Advanced User Interface
@@ -24,18 +24,18 @@ Our team has developed an advanced smart gripper system that combines precise co
 ### 3. Technical Innovations
 
 #### Control System
-- **Adaptive PID Control**: Self-tuning parameters based on object properties
+- **Adaptive PID Control**: A optional PID-control for a constant force grip
 - **Force Feedback Loop**: Real-time adjustment using magnetic sensor data
 - **Smart Grip Strategy**: 
-  - Automatic force adjustment for different materials
+  - Gripping: torque control + smart object detection to switch from closing to hold
   - Gentle handling of fragile objects
-  - Secure grip for heavy items
   - Adaptive response to object shape
+  - Opening: positional control to open and stop before disengaging gears
 
 #### Hardware Integration
 - **Sensor Fusion**: Integration of multiple magnetic sensors for precise feedback
-- **Motor Control**: Optimized BLDC motor control with voltage and current monitoring
-- **Safety Features**: Automatic limit detection and emergency stop functionality
+- **Motor Control**: Optimized BLDC motor control with voltage and current monitoring and a variety of control strategies
+- **Safety Features**: Automatic limit detection for closing and opening to prevent motor overheating or disengaging of gears
 
 ## Technical Implementation
 
@@ -56,14 +56,12 @@ Our team has developed an advanced smart gripper system that combines precise co
 
 ### Control Algorithms
 1. **PID Tuning System**
-   - Automated parameter optimization
-   - Real-time performance monitoring
-   - Adaptive gain scheduling
+   - self tuning by user dependend on hardware condition
 
 2. **Smart Control Strategy**
-   - Object property detection
-   - Material classification
-   - Force profile optimization
+   - Object property detection (size)
+   - Material classification (in future based on force change over time)
+   - Force profile optimization (in future)
   
 <img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
 
@@ -80,6 +78,7 @@ Our team has developed an advanced smart gripper system that combines precise co
 - Real-time data visualization
 - Voice control implementation
 - Communication protocol design
+- restructuring of the code
 
 ## Future Improvements
 1. **Enhanced Control**
@@ -100,10 +99,9 @@ Our team has developed an advanced smart gripper system that combines precise co
 ## Technical Challenges and Solutions
 
 ### Challenge 1: Control Tuning
-- **Problem**: Manual PID tuning for BLDC motors is complex and time-consuming
+- **Problem**: Manual PID tuning for BLDC motors is complex and time-consuming + parameters are dependend on hardware condition
 - **Solution**: 
-  - Implemented automated tuning process
-  - Developed adaptive control strategies
+  - Developed alternative adaptive control strategies
   - Created real-time performance monitoring
 
 ### Challenge 2: Smart Control
