@@ -11,6 +11,7 @@ interface DataPoint {
   magneticY: number;
   magneticZ: number;
   output: number;
+  distance: number;
 }
 
 const Dashboard: React.FC = () => {
@@ -18,6 +19,7 @@ const Dashboard: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMoving, setIsMoving] = useState(false);
+  const [currentDistance, setCurrentDistance] = useState(50);
   const [statusData, setStatusData] = useState({
     torque: 0,
     temperature: 0,
@@ -51,14 +53,18 @@ const Dashboard: React.FC = () => {
             magneticX: sensorData.magneticX,
             magneticY: sensorData.magneticY,
             magneticZ: sensorData.magneticZ,
-            output: sensorData.output
+            output: sensorData.output,
+            distance: sensorData.distance
           };
+          
+          // Update current distance
+          setCurrentDistance(sensorData.distance);
           
           // Update status data with latest readings
           setStatusData(prev => ({
             ...prev,
-            torque: Math.abs(sensorData.magneticZ) * 0.1, // Convert magnetic reading to torque
-            temperature: 25 + (Math.abs(sensorData.magneticX) * 0.5), // Simulate temperature based on magnetic activity
+            torque: Math.abs(sensorData.magneticZ) * 0.1,
+            temperature: 25 + (Math.abs(sensorData.magneticX) * 0.5),
             voltage: sensorData.output,
             connected: true
           }));
@@ -96,7 +102,7 @@ const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="w-full h-auto min-h-[600px] max-h-[800px]">
-          <GripperVisualization position={50} force={0} />
+          <GripperVisualization position={currentDistance} force={Math.abs(statusData.torque)} />
         </div>
         <div className="w-full space-y-6">
           <GripperControl onCommand={handleCommand} />

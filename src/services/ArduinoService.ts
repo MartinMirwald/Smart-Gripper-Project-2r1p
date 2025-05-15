@@ -3,6 +3,7 @@ export interface SensorData {
   magneticY: number;
   magneticZ: number;
   output: number;
+  distance: number;
 }
 
 export interface ArduinoMessage {
