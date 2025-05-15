@@ -13,53 +13,119 @@ export interface ArduinoMessage {
 
 export class ArduinoService {
   private ws: WebSocket | null = null;
-  private isWebSocketConnected = false;
-  private isArduinoConnected = false;
-  private messageHandlers: ((data: any) => void)[] = [];
-  private connectionHandlers: ((connected: boolean) => void)[] = [];
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000; // Start with 1 second
+  private maxReconnectDelay = 10000; // Max 10 seconds
+  private connectionChangeCallbacks: ((connected: boolean) => void)[] = [];
+  private dataCallbacks: ((data: any) => void)[] = [];
+  private isConnecting = false;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
   private upperVoltageLimit = 6.0;
   private lowerVoltageLimit = 0.0;
 
-  async connect() {
+  constructor() {
+    this.connect();
+  }
+
+  private connect() {
+    if (this.isConnecting || this.ws?.readyState === WebSocket.OPEN) {
+      return;
+    }
+
+    this.isConnecting = true;
+    console.log('Connecting to backend...');
+
     try {
       this.ws = new WebSocket('ws://localhost:8000/ws');
-      
+
       this.ws.onopen = () => {
-        this.isWebSocketConnected = true;
         console.log('Connected to backend');
+        this.isConnecting = false;
+        this.reconnectAttempts = 0;
+        this.reconnectDelay = 1000;
+        this.notifyConnectionChange(true);
       };
 
       this.ws.onclose = () => {
-        this.isWebSocketConnected = false;
         console.log('Disconnected from backend');
+        this.isConnecting = false;
+        this.notifyConnectionChange(false);
+        this.attemptReconnect();
       };
 
       this.ws.onerror = (error) => {
         console.error('WebSocket error:', error);
-        this.isWebSocketConnected = false;
+        this.isConnecting = false;
       };
 
       this.ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        this.messageHandlers.forEach(handler => handler(data));
+        try {
+          const data = JSON.parse(event.data);
+          this.dataCallbacks.forEach(callback => callback(data));
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
       };
-
-      return true;
     } catch (error) {
-      console.error('Error connecting to backend:', error);
-      this.isWebSocketConnected = false;
-      return false;
+      console.error('Error creating WebSocket:', error);
+      this.isConnecting = false;
+      this.attemptReconnect();
     }
   }
 
-  async sendCommand(command: string) {
+  private attemptReconnect() {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
+
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('Max reconnection attempts reached');
+      return;
+    }
+
+    this.reconnectAttempts++;
+    const delay = Math.min(this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts - 1), this.maxReconnectDelay);
+    
+    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+    
+    this.reconnectTimeout = setTimeout(() => {
+      this.connect();
+    }, delay);
+  }
+
+  private notifyConnectionChange(connected: boolean) {
+    this.connectionChangeCallbacks.forEach(callback => callback(connected));
+  }
+
+  onConnectionChange(callback: (connected: boolean) => void) {
+    this.connectionChangeCallbacks.push(callback);
+    // Immediately notify of current state
+    callback(this.ws?.readyState === WebSocket.OPEN);
+    return () => {
+      this.connectionChangeCallbacks = this.connectionChangeCallbacks.filter(cb => cb !== callback);
+    };
+  }
+
+  onData(callback: (data: any) => void) {
+    this.dataCallbacks.push(callback);
+    return () => {
+      this.dataCallbacks = this.dataCallbacks.filter(cb => cb !== callback);
+    };
+  }
+
+  async sendCommand(command: string): Promise<void> {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error('Not connected to backend');
+    }
+
     try {
       const response = await fetch(`http://localhost:8000/command/${command}`, {
-        method: 'POST',
+        method: 'POST'
       });
-      const data = await response.json();
-      if (data.status === 'error') {
-        throw new Error(data.message);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to send command: ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error sending command:', error);
@@ -67,14 +133,18 @@ export class ArduinoService {
     }
   }
 
-  async setPosition(position: number) {
+  async setPosition(position: number): Promise<void> {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error('Not connected to backend');
+    }
+
     try {
       const response = await fetch(`http://localhost:8000/position/${position}`, {
-        method: 'POST',
+        method: 'POST'
       });
-      const data = await response.json();
-      if (data.status === 'error') {
-        throw new Error(data.message);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to set position: ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error setting position:', error);
@@ -82,18 +152,22 @@ export class ArduinoService {
     }
   }
 
-  async setVoltageLimits(upper: number, lower: number) {
+  async setVoltageLimits(upper: number, lower: number): Promise<void> {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error('Not connected to backend');
+    }
+
     try {
       const response = await fetch('http://localhost:8000/voltage-limits', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ upper, lower }),
+        body: JSON.stringify({ upper, lower })
       });
-      const data = await response.json();
-      if (data.status === 'error') {
-        throw new Error(data.message);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to set voltage limits: ${response.statusText}`);
       }
       this.upperVoltageLimit = upper;
       this.lowerVoltageLimit = lower;
@@ -103,34 +177,19 @@ export class ArduinoService {
     }
   }
 
-  onMessage(handler: (data: any) => void) {
-    this.messageHandlers.push(handler);
-    return () => {
-      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
-    };
-  }
-
-  onConnectionChange(handler: (connected: boolean) => void) {
-    this.connectionHandlers.push(handler);
-    return () => {
-      this.connectionHandlers = this.connectionHandlers.filter(h => h !== handler);
-    };
-  }
-
   disconnect() {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
-    this.isWebSocketConnected = false;
   }
 
   async sendSensorData(sensorData: SensorData) {
-    if (!this.isWebSocketConnected) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error('Not connected to backend');
-    }
-    if (!this.isArduinoConnected) {
-      throw new Error('Arduino not connected');
     }
     try {
       const response = await fetch('http://localhost:8000/sensor-data', {
@@ -151,11 +210,8 @@ export class ArduinoService {
   }
 
   async getSensorData(): Promise<SensorData> {
-    if (!this.isWebSocketConnected) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error('Not connected to backend');
-    }
-    if (!this.isArduinoConnected) {
-      throw new Error('Arduino not connected');
     }
     try {
       const response = await fetch('http://localhost:8000/sensor-data');
@@ -171,11 +227,8 @@ export class ArduinoService {
   }
 
   async getCommandResponse(): Promise<string> {
-    if (!this.isWebSocketConnected) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error('Not connected to backend');
-    }
-    if (!this.isArduinoConnected) {
-      throw new Error('Arduino not connected');
     }
     try {
       const response = await fetch('http://localhost:8000/command-response');
@@ -191,11 +244,8 @@ export class ArduinoService {
   }
 
   async getRawMessage(): Promise<string> {
-    if (!this.isWebSocketConnected) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error('Not connected to backend');
-    }
-    if (!this.isArduinoConnected) {
-      throw new Error('Arduino not connected');
     }
     try {
       const response = await fetch('http://localhost:8000/raw-message');
@@ -211,7 +261,7 @@ export class ArduinoService {
   }
 
   isDeviceConnected() {
-    return this.isArduinoConnected;
+    return this.ws?.readyState === WebSocket.OPEN;
   }
 
   getVoltageLimits() {

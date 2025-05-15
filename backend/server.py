@@ -28,9 +28,14 @@ class ArduinoConnection:
         self.serial = None
         self.last_read_time = 0
         self.is_connected = False
+        self.reconnect_attempts = 0
+        self.max_reconnect_attempts = 3
 
     def connect(self, port: str) -> bool:
         try:
+            if self.serial and self.serial.is_open:
+                self.serial.close()
+            
             self.serial = serial.Serial(
                 port=port,
                 baudrate=115200,
@@ -41,20 +46,34 @@ class ArduinoConnection:
             )
             self.is_connected = True
             self.last_read_time = time.time()
+            self.reconnect_attempts = 0
             return True
         except Exception as e:
             print(f"Failed to connect to Arduino: {e}")
+            self.is_connected = False
             return False
 
     def disconnect(self):
         if self.serial and self.serial.is_open:
-            self.serial.close()
+            try:
+                self.serial.close()
+            except Exception as e:
+                print(f"Error closing serial connection: {e}")
         self.is_connected = False
 
     def read_data(self) -> str:
-        if not self.is_connected or not self.serial.is_open:
+        if not self.is_connected:
             return None
+            
         try:
+            if not self.serial or not self.serial.is_open:
+                self.is_connected = False
+                return None
+                
+            # Check if there's data to read
+            if not self.serial.in_waiting:
+                return None
+                
             # Read raw bytes first
             raw_data = self.serial.readline()
             if not raw_data:
@@ -74,18 +93,28 @@ class ArduinoConnection:
             if data:
                 self.last_read_time = time.time()
             return data
+        except serial.SerialException as e:
+            print(f"Serial error: {e}")
+            self.is_connected = False
+            return None
         except Exception as e:
             print(f"Error reading from Arduino: {e}")
             return None
 
     def write_command(self, command: str) -> bool:
-        if not self.is_connected or not self.serial.is_open:
+        if not self.is_connected:
             return False
+            
         try:
+            if not self.serial or not self.serial.is_open:
+                self.is_connected = False
+                return False
+                
             self.serial.write(f"{command}\n".encode())
             return True
         except Exception as e:
             print(f"Error writing to Arduino: {e}")
+            self.is_connected = False
             return False
 
 arduino_conn = ArduinoConnection()
@@ -189,7 +218,8 @@ async def shutdown_event():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     active_connections.append(websocket)
-    print("connection open")
+    print("WebSocket connection opened")
+    
     try:
         while True:
             if arduino_conn.is_connected:
@@ -233,13 +263,18 @@ async def websocket_endpoint(websocket: WebSocket):
                         continue
             await asyncio.sleep(0.01)  # Small delay to prevent CPU overuse
     except WebSocketDisconnect:
-        print("connection closed")
+        print("WebSocket connection closed")
         if websocket in active_connections:
             active_connections.remove(websocket)
     except Exception as e:
         print(f"WebSocket error: {e}")
         if websocket in active_connections:
             active_connections.remove(websocket)
+    finally:
+        # Ensure the connection is removed from active connections
+        if websocket in active_connections:
+            active_connections.remove(websocket)
+        print("WebSocket connection cleaned up")
 
 @app.post("/command/{cmd}")
 async def send_command(cmd: str):
