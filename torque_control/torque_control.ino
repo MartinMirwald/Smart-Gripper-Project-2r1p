@@ -351,7 +351,7 @@ void opengripper() {
   }
   if (true) {
     motor.controller = MotionControlType::angle_openloop;
-    motor.move(1);
+    motor.move(80);
     output = 0;
     target_voltage = 0;
     distance = 100;
