@@ -91,29 +91,6 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ onPositionChange, onForceCh
           Reset Controls
         </button>
       </div>
-      
-      {/* System readouts */}
-      <div className="mt-8 border-t border-blue-500/20 pt-4">
-        <h4 className="text-sm font-medium text-blue-400 mb-2">System Readouts</h4>
-        <div className="grid grid-cols-2 gap-2 text-xs text-blue-300">
-          <div className="bg-slate-800 p-2 rounded border border-blue-500/20">
-            <div className="text-slate-400">Power Draw</div>
-            <div className="font-mono">1.2 kW</div>
-          </div>
-          <div className="bg-slate-800 p-2 rounded border border-blue-500/20">
-            <div className="text-slate-400">CPU Load</div>
-            <div className="font-mono">27%</div>
-          </div>
-          <div className="bg-slate-800 p-2 rounded border border-blue-500/20">
-            <div className="text-slate-400">Memory</div>
-            <div className="font-mono">314MB</div>
-          </div>
-          <div className="bg-slate-800 p-2 rounded border border-blue-500/20">
-            <div className="text-slate-400">Uptime</div>
-            <div className="font-mono">3h 24m</div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

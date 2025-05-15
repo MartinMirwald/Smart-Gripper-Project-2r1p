@@ -1,68 +1,89 @@
 export class ArduinoService {
-  private port: SerialPort | null = null;
-  private reader: ReadableStreamDefaultReader | null = null;
-  private writer: WritableStreamDefaultWriter | null = null;
+  private ws: WebSocket | null = null;
   private isConnected = false;
+  private messageHandlers: ((data: any) => void)[] = [];
 
   async connect() {
     try {
-      // Request port and open it
-      this.port = await navigator.serial.requestPort();
-      await this.port.open({ baudRate: 115200 });
+      this.ws = new WebSocket('ws://localhost:8000/ws');
       
-      // Set up reading
-      const textDecoder = new TextDecoderStream();
-      this.port.readable.pipeTo(textDecoder.writable);
-      const readableStreamClosed = this.port.readableClosed;
-      const reader = textDecoder.readable.getReader();
-      this.reader = reader;
+      this.ws.onopen = () => {
+        this.isConnected = true;
+        console.log('Connected to backend');
+      };
 
-      // Set up writing
-      const textEncoder = new TextEncoderStream();
-      textEncoder.readable.pipeTo(this.port.writable);
-      this.writer = textEncoder.writable.getWriter();
+      this.ws.onclose = () => {
+        this.isConnected = false;
+        console.log('Disconnected from backend');
+      };
 
-      this.isConnected = true;
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.isConnected = false;
+      };
+
+      this.ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        this.messageHandlers.forEach(handler => handler(data));
+      };
+
       return true;
     } catch (error) {
-      console.error('Error connecting to Arduino:', error);
+      console.error('Error connecting to backend:', error);
       this.isConnected = false;
       return false;
     }
   }
 
   async disconnect() {
-    if (this.reader) {
-      await this.reader.cancel();
-      this.reader = null;
-    }
-    if (this.writer) {
-      await this.writer.close();
-      this.writer = null;
-    }
-    if (this.port) {
-      await this.port.close();
-      this.port = null;
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
     }
     this.isConnected = false;
   }
 
   async sendCommand(command: string) {
-    if (!this.writer || !this.isConnected) {
-      throw new Error('Not connected to Arduino');
+    if (!this.isConnected) {
+      throw new Error('Not connected to backend');
     }
-    await this.writer.write(command + '\n');
+    try {
+      const response = await fetch(`http://localhost:8000/command/${command}`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (data.status === 'error') {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error('Error sending command:', error);
+      throw error;
+    }
   }
 
-  async readData(): Promise<string> {
-    if (!this.reader || !this.isConnected) {
-      throw new Error('Not connected to Arduino');
+  async setPosition(position: number) {
+    if (!this.isConnected) {
+      throw new Error('Not connected to backend');
     }
-    const { value, done } = await this.reader.read();
-    if (done) {
-      throw new Error('Stream closed');
+    try {
+      const response = await fetch(`http://localhost:8000/position/${position}`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (data.status === 'error') {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error('Error setting position:', error);
+      throw error;
     }
-    return value;
+  }
+
+  onData(handler: (data: any) => void) {
+    this.messageHandlers.push(handler);
+    return () => {
+      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
+    };
   }
 
   isDeviceConnected() {
