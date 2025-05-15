@@ -18,7 +18,6 @@
  * This is a basic example; you can be creative to improve this gripper!
  */
 
-//TEST
 #include "TLE5012Sensor.h"
 #include "TLx493D_inc.hpp"
 #include "config.h"
@@ -30,8 +29,6 @@
 #define PIN_SPI1_MOSI 69  // MOSI pin
 #define PIN_SPI1_MISO 95  // MISO pin
 #define PIN_SPI1_SCK 68   // SCK pin
-
-
 
 using namespace tle5012;
 
@@ -61,6 +58,8 @@ float force_setpoint = -0.5;
 // === Zeit für PID (für D-Glied & I-Glied) ===
 unsigned long pid_last_time = 0;
 
+// Initialize z_prev to prevent undefined behavior
+double z_prev = 0.0;
 
 // create an instance of SPIClass3W for 3-wire SPI communication
 tle5012::SPIClass3W tle5012::SPI3W1(2);
@@ -106,6 +105,10 @@ void doTarget(char *cmd) {
   command.scalar(&target_voltage, cmd);
 }
 #endif
+
+// Debouncing variables for buttons
+unsigned long lastButtonPressTime = 0;
+const unsigned long debounceDelay = 200; // milliseconds
 
 void setup() {
   // use monitoring with serial
@@ -160,6 +163,8 @@ void setup() {
   pinMode(BUTTON2, INPUT);
 #endif
 
+  // Initialize pid_last_time
+  pid_last_time = millis();
 
   Serial.print("setup done.\n");
 #if ENABLE_COMMANDER
@@ -171,12 +176,21 @@ void setup() {
 }
 
 void loop() {
+  // Update the motor and sensor at the beginning
+  tle5012Sensor.update();
+  motor.loopFOC();
+  
+  // Read angle before anything else to ensure consistent data
+  Tle5012Sensor.getAngleValue(d);
+  
+  // Default output and target voltage - will be modified based on conditions
+  float output = 0.0;
+  
   checkSerialInput();
 
 #if ENABLE_MAGNETIC_SENSOR
-
   // read the magnetic field data
-  double x, y, z, z_prev;
+  double x, y, z;
   dut.setSensitivity(TLx493D_FULL_RANGE_e);
   dut.getMagneticField(&x, &y, &z);
 
@@ -185,113 +199,93 @@ void loop() {
   y -= yOffset;
   z -= zOffset;
 
-  float output = computePIDOutput(z);
-
-
-  //read buttons decide open close hold state
-  if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
-    open = false;
-    close = false;
-    hold = true;
-    delay(1000);
-  } else if (digitalRead(BUTTON1) == LOW) {
-    open = false;
-    close = true;
-    hold = false;  // PID macht Kraftregelung für close
-  } else if (digitalRead(BUTTON2) == LOW) {
-    open = true;
-    close = false;
-    hold = false;
+  // Check for button presses with debouncing
+  unsigned long currentTime = millis();
+  if (currentTime - lastButtonPressTime > debounceDelay) {
+    if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
+      open = false;
+      close = false;
+      hold = true;
+      lastButtonPressTime = currentTime;
+    } else if (digitalRead(BUTTON1) == LOW) {
+      open = false;
+      close = true;
+      hold = false;
+      lastButtonPressTime = currentTime;
+    } else if (digitalRead(BUTTON2) == LOW) {
+      open = true;
+      close = false;
+      hold = false;
+      lastButtonPressTime = currentTime;
+    }
   }
 
-  // act according to open close hold state
+  // Calculate the force feedback and PID output only if needed
+  float pid_output = 0.0;
   if (close) {
+    pid_output = computePIDOutput(z);
+  }
 
-    target_voltage = -output;  // PID macht Kraftregelung für close
+  // Calculate dz for resistance detection
+  float dz = z - z_prev;
+  z_prev = z;  // Update z_prev for next iteration
+  
+  // Safety check for angle - don't let arms go too deep
+  bool angle_limit_exceeded = (d > 30);
+  
+  // Determine target voltage based on state and safety checks
+  if (angle_limit_exceeded) {
+    // Safety limits exceeded, stop movement
+    target_voltage = 0;
+    Serial.println("Angle limit exceeded - holding position");
+  } else if (close) {
+    if (dz > growth_thresh) {
+      // Resistance detected, adjust force
+      Serial.println("Resistance detected while closing");
+      target_voltage = -pid_output;  // Use PID for force control
+    } else {
+      // Continue closing with normal force
+      target_voltage = -3.0;  // Fixed closing force, can be adjusted
+    }
     Serial.println("close");
-
   } else if (open) {
-    output = 6;
     target_voltage = 6;  // open gripper
     Serial.println("open");
   } else if (hold) {
-    output = 0;
-    target_voltage = 0;
+    target_voltage = 0;  // maintain position
     Serial.println("hold");
   }
-  // print the magnetic field data
+
+  // Print the magnetic field data
   Serial.print(x);
   Serial.print(",");
-
   Serial.print(y);
   Serial.print(",");
-
   Serial.print(z);
   Serial.print(",");
-  Serial.print(output);
+  Serial.print(target_voltage);
   Serial.println("");
 #endif
 
-  //martin code
-  //getDistance();
-
-
-
-
-  // update angle sensor data
-  tle5012Sensor.update();
-  motor.move(target_voltage);
-
-//end martin code
 #if ENABLE_READ_ANGLE
   Serial.print(tle5012Sensor.getSensorAngle());
   Serial.println("");
 #endif
-  // main FOC algorithm function
-  // the faster you run this function the better
-  // Arduino UNO loop  ~1kHz
-  // Bluepill loop ~10kHz
-  motor.loopFOC();
 
-  // Motion control function
-  // velocity, position or voltage (defined in motor.controller)
-  // this function can be run at much lower frequency than loopFOC() function
-  // You can also use motor.move() and set the motor.target in the code
+  // Apply the calculated target voltage to move the motor
   motor.move(target_voltage);
+
 #if ENABLE_COMMANDER
   // user communication
   command.run();
 #endif
 
-
-  // Arme gehen nicht tiefer
-  Tle5012Sensor.getAngleValue(d);
+  // Print angle for debug
   Serial.println(d);
-  // Arme gehen nicht tiefer
-  if (d > 30) {
-    output = 0;
-    target_voltage = 0;
-  }
-
-  //motor stoppt bei wiederstand
-
-
-  float dz = z - z_prev;
-  if (dz > growth_thresh) 
-  {
-    // Z steigt stark genug → weiter greifen
-    output = 6;
-
-  } else {
-
-    output = 0;
-  }
-
-  z_prev = z;
-
+  
+  // Add a small delay to prevent overwhelming the serial monitor and CPU
+  delay(10);
 }
-
-
 
 #if ENABLE_MAGNETIC_SENSOR
 /**
@@ -324,30 +318,30 @@ float computePIDOutput(float current_force) {
   unsigned long now = millis();
   float dt = (now - pid_last_time) / 1000.0;
 
+  // Prevent division by zero and handle first call
   if (dt <= 0.0) dt = 0.001;
 
   float error = force_setpoint - current_force;
 
+  // Limit integral to prevent windup
   pid_integral += error * dt;
+  pid_integral = constrain(pid_integral, -10.0, 10.0);
+  
   float derivative = (error - pid_last_error) / dt;
 
-  float output = -Kp * error + Ki * pid_integral + Kd * derivative;
-  //Serial.println("output:");
-
-  motor.move(target_voltage);
+  float output = Kp * error + Ki * pid_integral + Kd * derivative;
+  
   pid_last_error = error;
   pid_last_time = now;
 
-  return constrain(output, -5, 5);  // max +/- Spannung deines Motors
+  return constrain(output, -5, 5);  // max +/- motor voltage
 }
 
 float getDistance() {
-  //double d = 0.0;
   Tle5012Sensor.getAngleValue(d);
-  // d=d/360;
   Serial.println(d);
   return d;
-  //30 rad von zu bis offen
+  //30 rad from closed to open
 }
 
 void checkSerialInput() {
@@ -355,13 +349,10 @@ void checkSerialInput() {
     String input = Serial.readStringUntil('\n');  // Read input until newline
     input.trim();                                 // Remove any leading/trailing whitespace
 
-
-
     if (input.startsWith("open")) {
       open = true;
       close = false;
       hold = false;
-
     } else if (input == "close") {
       open = false;
       close = true;
@@ -370,12 +361,10 @@ void checkSerialInput() {
       open = false;
       close = false;
       hold = true;
-    }
-
-    else if (input == "PING") {
+    } else if (input == "PING") {
       Serial.println("PONG");  // Respond to initialization check
     } else {
-      Serial.println("Error: Invalid command. Use 'kp <value>', 'ki <value>', 'kd <value>', 'alpha <value>', 'd <0/1>', 'bridge on', or 'bridge off'.");
+      Serial.println("Error: Invalid command. Use 'open', 'close', 'hold', or 'PING'.");
     }
   }
 }
