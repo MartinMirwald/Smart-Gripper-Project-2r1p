@@ -3,7 +3,7 @@
 
 ![Luke Skywalker Hand](img/lukehand.jpg)
 
-## Project Overview
+## Project Overview - Hello There!
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
 
 ## Key Features
