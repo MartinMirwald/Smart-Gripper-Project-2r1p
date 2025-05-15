@@ -33,26 +33,33 @@ def get_arduino_port():
         
     print("\nAvailable ports:")
     for port in ports:
-        print(f"- {port.device}: {port.description}")
+        print(f"- {port.device}: {port.description} (VID:PID={port.vid:04x}:{port.pid:04x})")
     
     # Try to find Arduino by common identifiers
     for port in ports:
-        if any(identifier in port.description.lower() for identifier in [
+        # Check both description and hardware ID
+        port_info = f"{port.description} {port.hwid}".lower()
+        if any(identifier in port_info for identifier in [
             "arduino",
             "usb serial",
             "usb-uart",
             "ch340",  # Common Arduino clone chip
             "cp210x",  # Common Arduino clone chip
-            "ftdi"     # Common Arduino clone chip
+            "ftdi",    # Common Arduino clone chip
+            "acm",     # Linux Arduino identifier
+            "ttyusb",  # Linux USB serial
+            "ttyacm"   # Linux ACM serial
         ]):
             print(f"\nFound potential Arduino on {port.device}")
+            print(f"Description: {port.description}")
+            print(f"Hardware ID: {port.hwid}")
             return port.device
             
     # If no Arduino found by description, list all ports and ask user
     print("\nNo Arduino automatically detected.")
     print("Available ports:")
     for i, port in enumerate(ports, 1):
-        print(f"{i}. {port.device}: {port.description}")
+        print(f"{i}. {port.device}: {port.description} (VID:PID={port.vid:04x}:{port.pid:04x})")
     
     try:
         choice = int(input("\nEnter the number of the port to use: "))
@@ -72,6 +79,7 @@ async def startup_event():
     port = get_arduino_port()
     if port:
         try:
+            print(f"\nAttempting to connect to {port}...")
             arduino = serial.Serial(
                 port=port,
                 baudrate=115200,
@@ -80,25 +88,27 @@ async def startup_event():
                 parity=serial.PARITY_NONE,
                 stopbits=serial.STOPBITS_ONE
             )
-            print(f"\nSuccessfully connected to Arduino on {port}")
+            print(f"Successfully connected to Arduino on {port}")
             print("Waiting for Arduino to initialize...")
             await asyncio.sleep(2)  # Give Arduino time to reset
             
             # Test connection
+            print("Testing connection...")
             arduino.write(b"PING\n")
             response = arduino.readline().decode().strip()
             if response == "PONG":
                 print("Arduino connection verified!")
             else:
-                print("Warning: Arduino response not as expected")
+                print(f"Warning: Arduino response not as expected. Got: {response}")
                 
         except Exception as e:
             print(f"\nFailed to connect to Arduino: {e}")
-            print("Please check:")
+            print("\nPlease check:")
             print("1. Arduino is properly connected")
             print("2. No other program is using the port")
             print("3. Correct port is selected")
             print("4. Arduino code is uploaded")
+            print("5. You have permission to access the port (try: sudo chmod 666 /dev/ttyUSB0)")
     else:
         print("\nNo Arduino found. Please connect an Arduino and restart the server.")
 
