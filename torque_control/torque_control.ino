@@ -382,7 +382,7 @@ void closegripper() {
     motor.controller = MotionControlType::torque;//switch to advanced torque controll technique
   }
   //stops at a force threshhold in order to not break objects
-  if (abs(y) + abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
+  if (abs(y) + abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {//abs(y) + abs(z) we call it sensor fusion
     target_voltage = 0;
     //output = -3;
     //distance = 10;
