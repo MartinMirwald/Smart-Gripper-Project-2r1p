@@ -248,7 +248,8 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
         console.log(`Test Mode: Simulating ${command} command`);
         return;
       }
-      await onCommand(command);
+      await arduinoService.sendCommand(command);
+      setLastCommand(command);
     } catch (error) {
       console.error('Error sending command:', error);
       setError('Failed to send command');
