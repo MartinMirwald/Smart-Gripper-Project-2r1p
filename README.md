@@ -113,6 +113,8 @@ Our team has developed an advanced smart gripper system that combines precise co
   - Developed object property detection
   - Created smart grip and release strategies
 
+<img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
+
 ## Getting Started
 
 ### Prerequisites
