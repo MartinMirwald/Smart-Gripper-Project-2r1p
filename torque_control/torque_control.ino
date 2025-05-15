@@ -118,7 +118,7 @@ void setup() {
   // initialise magnetic sensor hardware
   tle5012Sensor.init();
   Serial.println("TLE5012 sensor initialized");
-  
+
   // link the motor to the sensor
   motor.linkSensor(&tle5012Sensor);
   Serial.println("Motor linked to sensor");
@@ -134,7 +134,7 @@ void setup() {
     return;
   }
   Serial.println("Driver initialized");
-  
+
   // link the motor and the driver
   motor.linkDriver(&driver);
   Serial.println("Motor linked to driver");
@@ -152,7 +152,7 @@ void setup() {
   // initialize motor
   motor.init();
   Serial.println("Motor initialized");
-  
+
   // align sensor and start FOC
   motor.initFOC();
   Serial.println("FOC initialized");
@@ -162,7 +162,7 @@ void setup() {
   // start 3D magnetic sensor
   dut.begin();
   Serial.println("3D magnetic sensor started");
-  
+
   // calibrate 3D magnetic sensor to get the offsets
   calibrateSensor();
   Serial.println("3D magnetic sensor Calibration completed");
@@ -210,7 +210,7 @@ void loop() {
   }
 
   sendStates();
-  Serial.println("Data sent"); // Debug message
+  Serial.println("Data sent");  // Debug message
 #endif
 
   // update angle sensor data
@@ -333,17 +333,32 @@ void checkSerialInput() {
 }
 
 void opengripper() {
-  output= lower_voltage_limit;
-  target_voltage = lower_voltage_limit;
+  if (false) {
+    output = lower_voltage_limit;
+    target_voltage = lower_voltage_limit;
+    delay(500);
+    output = 0;
+    target_voltage = 0;
+    distance = 100;
+  }
+  if (true) {
+    motor.controller = MotionControlType::angle_openloop;
+    motor.move(1);
+    output = 0;
+    target_voltage = 0;
+    distance = 100;
+  }
 }
 
 void closegripper() {
-  if (abs(y) > forcethreshhold){//z < forcethreshhold) {
+  if (abs(y) > abs(forcethreshhold)) {  //z < forcethreshhold) {
     target_voltage = 0;
     //output = -3;
+    distance = 10;
     return;
   }
- // output=upper_voltage_limit;
+  distance = 0;
+  // output=upper_voltage_limit;
   target_voltage = upper_voltage_limit;  //computePIDOutput(z);
 }
 
@@ -363,5 +378,8 @@ void sendStates() {
   Serial.print(z);
   Serial.print(",");
   Serial.print(output);
+
+  Serial.print(",");
+  Serial.print(distance);
   Serial.println("");
 }
