@@ -17,8 +17,8 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
   
   // Calculate color based on force magnitude
   const forceMagnitude = Math.abs(force);
-  const forceColor = forceMagnitude < 7 ? 'bg-blue-500' : 
-                    forceMagnitude < 14 ? 'bg-yellow-500' : 
+  const forceColor = forceMagnitude < 2 ? 'bg-blue-500' : 
+                    forceMagnitude < 4 ? 'bg-yellow-500' : 
                     'bg-red-500';
   
   // Calculate distance between fingers (0-90mm)
@@ -152,12 +152,12 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
           <div className="bg-slate-800/80 rounded-full h-3 mt-4 overflow-hidden border border-slate-700/50">
             <div 
               className={`h-3 rounded-full ${forceColor} transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.3)]`}
-              style={{ width: `${(Math.min(Math.abs(force), 20) / 20) * 100}%` }}
+              style={{ width: `${(Math.min(Math.abs(force), 6) / 6) * 100}%` }}
             ></div>
           </div>
           <div className="text-lg text-right mt-3 font-bold text-blue-300">{force.toFixed(1)}</div>
           <div className="text-xs text-blue-400/70 mt-1 text-right">
-            {forceMagnitude < 7 ? 'Low' : forceMagnitude < 14 ? 'Medium' : 'High'}
+            {forceMagnitude < 2 ? 'Low' : forceMagnitude < 4 ? 'Medium' : 'High'}
           </div>
         </div>
         
