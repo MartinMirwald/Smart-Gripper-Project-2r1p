@@ -150,3 +150,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 - Infineon crew for their guidance and support, may the force be with you!
+
+
+![lightsaber](https://github.com/user-attachments/assets/099a09a6-a395-4713-8fd6-07738a3abfc2) ![baby-grogu](https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7)
