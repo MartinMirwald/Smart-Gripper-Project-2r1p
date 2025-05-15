@@ -1,4 +1,5 @@
-# Smart Gripper Project - Team 2r1p 🤖
+# Smart Gripper Project - Team 2r1p 🤖![lightsaber](https://github.com/user-attachments/assets/099a09a6-a395-4713-8fd6-07738a3abfc2)
+
 
 ![Luke Skywalker Hand](img/lukehand.jpg)
 
