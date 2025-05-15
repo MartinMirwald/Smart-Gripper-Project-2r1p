@@ -67,14 +67,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate }) => {
           collapsed={collapsed}
         />
       </div>
-      
-      <div className="absolute bottom-4 left-0 right-0 px-4">
-        <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-3 rounded-lg border border-slate-700/50">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

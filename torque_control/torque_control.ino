@@ -314,13 +314,19 @@ void checkSerialInput() {
     String input = Serial.readStringUntil('\n');  // Read input until newline
     input.trim();                                 // Remove any leading/trailing whitespace
 
-
-
-    if (input.startsWith("open")) {
+    if (input.startsWith("position ")) {
+      // Extract position value
+      float position = input.substring(9).toFloat();
+      // Convert position (0-6V) to target voltage
+      target_voltage = position;
+      open = false;
+      close = false;
+      hold = true;
+    }
+    else if (input.startsWith("open")) {
       open = true;
       close = false;
       hold = false;
-
     } else if (input == "close") {
       open = false;
       close = true;
@@ -330,11 +336,10 @@ void checkSerialInput() {
       close = false;
       hold = true;
     }
-
     else if (input == "PING") {
       Serial.println("PONG");  // Respond to initialization check
     } else {
-      Serial.println("Error: Invalid command. Use 'kp <value>', 'ki <value>', 'kd <value>', 'alpha <value>', 'd <0/1>', 'bridge on', or 'bridge off'.");
+      Serial.println("Error: Invalid command. Use 'position <value>', 'open', 'close', or 'hold'.");
     }
   }
 }
