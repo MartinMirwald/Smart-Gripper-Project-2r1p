@@ -282,13 +282,14 @@ float computePIDOutput(float current_force) {
   return constrain(output, -5, 5);  // max +/- Spannung deines Motors
 }
 
-float getDistance() {
+double getDistanceM() {
   double d = 0.0;
   d=motor.sensor->getAngle();
+  d=((19+d)/19)*100;
   //d=tle5012Sensor.getAngle();
   //d=d/(2*PI*30);
-  Serial.println(d);
-
+  //Serial.println(d);
+  return d;
   //30 rad von zu bis offen
 }
 
@@ -391,7 +392,7 @@ void sendStates() {
   Serial.print(output);
 
   Serial.print(",");
-  getDistance();
-  Serial.print(1);//distance);
+  double d=getDistanceM();
+  Serial.print(d);//distance);
   Serial.println("");
 }
