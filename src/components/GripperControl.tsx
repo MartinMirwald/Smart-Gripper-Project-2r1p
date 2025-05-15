@@ -67,9 +67,9 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [upperLimit, setUpperLimit] = useState('6.0');
-  const [lowerLimit, setLowerLimit] = useState('0.0');
+  const [lowerLimit, setLowerLimit] = useState('-6.0');
   const [tempUpperLimit, setTempUpperLimit] = useState('6.0');
-  const [tempLowerLimit, setTempLowerLimit] = useState('0.0');
+  const [tempLowerLimit, setTempLowerLimit] = useState('-6.0');
   const [error, setError] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
@@ -212,11 +212,12 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
   const handleVoltageLimitChange = (type: 'upper' | 'lower', value: string) => {
     if (!isConnected && !isTestMode) return;
     
-    // Update the temporary values
     if (type === 'upper') {
       setTempUpperLimit(value);
+      setTempLowerLimit((-parseFloat(value)).toFixed(1));
     } else {
       setTempLowerLimit(value);
+      setTempUpperLimit((-parseFloat(value)).toFixed(1));
     }
 
     // Check if values have changed from the current limits
@@ -234,13 +235,18 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
       return false;
     }
 
-    if (upperNum <= lowerNum) {
-      setError('Upper limit must be greater than lower limit');
+    if (upperNum <= 0 || lowerNum >= 0) {
+      setError('Upper limit must be positive and lower limit must be negative');
       return false;
     }
 
-    if (upperNum > 12 || lowerNum < 0) {
-      setError('Limits must be between 0V and 12V');
+    if (upperNum > 12 || lowerNum < -12) {
+      setError('Limits must be between -12V and 12V');
+      return false;
+    }
+
+    if (Math.abs(upperNum) !== Math.abs(lowerNum)) {
+      setError('Upper and lower limits must be symmetrical');
       return false;
     }
 
@@ -468,25 +474,25 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
                 }`}
                 disabled={!isConnected && !isTestMode}
                 step="0.1"
-                min="0"
-                max="12"
+                min="-12"
+                max="0"
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col">
                 <button
                   onClick={() => handleVoltageLimitChange('lower', (parseFloat(tempLowerLimit) + 0.1).toFixed(1))}
-                  disabled={!isConnected && !isTestMode || parseFloat(tempLowerLimit) >= 12}
+                  disabled={!isConnected && !isTestMode || parseFloat(tempLowerLimit) >= 0}
                   className={`text-blue-400 hover:text-blue-300 transition-colors ${
                     !isConnected && !isTestMode ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
-                  } ${parseFloat(tempLowerLimit) >= 12 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  } ${parseFloat(tempLowerLimit) >= 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
                 >
                   ▲
                 </button>
                 <button
                   onClick={() => handleVoltageLimitChange('lower', (parseFloat(tempLowerLimit) - 0.1).toFixed(1))}
-                  disabled={!isConnected && !isTestMode || parseFloat(tempLowerLimit) <= 0}
+                  disabled={!isConnected && !isTestMode || parseFloat(tempLowerLimit) <= -12}
                   className={`text-blue-400 hover:text-blue-300 transition-colors ${
                     !isConnected && !isTestMode ? 'opacity-30 cursor-not-allowed' : 'hover:text-blue-300'
-                  } ${parseFloat(tempLowerLimit) <= 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                  } ${parseFloat(tempLowerLimit) <= -12 ? 'opacity-30 cursor-not-allowed' : ''}`}
                 >
                   ▼
                 </button>
