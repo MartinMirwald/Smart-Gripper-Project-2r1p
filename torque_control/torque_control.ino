@@ -338,17 +338,17 @@ void opengripper() {
 }
 
 void closegripper() {
-  if (z < forcethreshhold) {
-    target_voltage = -3;
-    output = -3;
+  if (z < forcethreshhold){//z < forcethreshhold) {
+    target_voltage = 0;
+    //output = -3;
     return;
   }
-  output=upper_voltage_limit;
+ // output=upper_voltage_limit;
   target_voltage = upper_voltage_limit;  //computePIDOutput(z);
 }
 
 void holdgripper() {
-  output = 0;
+  //output = 0;
   target_voltage = 0;
 }
 void sendStates() {
