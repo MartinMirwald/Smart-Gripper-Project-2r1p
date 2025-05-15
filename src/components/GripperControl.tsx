@@ -257,8 +257,6 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
   };
 
   const handleVoltageLimitChange = (type: 'upper' | 'lower', value: string) => {
-    if (!isConnected && !isTestMode) return;
-    
     if (type === 'upper') {
       setTempUpperLimit(value);
       setTempLowerLimit((-parseFloat(value)).toFixed(1));
@@ -301,8 +299,6 @@ const GripperControl: React.FC<GripperControlProps> = ({ onCommand }) => {
   };
 
   const saveVoltageLimits = async () => {
-    if (!isConnected && !isTestMode) return;
-    
     if (!validateLimits(tempUpperLimit, tempLowerLimit)) {
       return;
     }
