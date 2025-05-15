@@ -47,7 +47,7 @@ Our team has developed an advanced smart gripper system that combines precise co
 - **Actuators**: BLDC motor with integrated position feedback
 
 ### Software Architecture
-- **Frontend**: React-based web interface
+- **Frontend**: React-based web interface (also supporting different platforms like Windows and Linux)
 - **Backend**: Python server with WebSocket support
 - **Firmware**: Custom Arduino implementation
 - **Communication**: 
