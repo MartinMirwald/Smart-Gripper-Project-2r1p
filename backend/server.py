@@ -5,6 +5,7 @@ import asyncio
 import json
 from typing import List, Dict
 import serial.tools.list_ports
+import sys
 
 app = FastAPI()
 
@@ -23,10 +24,45 @@ arduino = None
 
 def get_arduino_port():
     """Find the Arduino port automatically"""
+    print("\nSearching for Arduino...")
     ports = serial.tools.list_ports.comports()
+    
+    if not ports:
+        print("No serial ports found!")
+        return None
+        
+    print("\nAvailable ports:")
     for port in ports:
-        if "Arduino" in port.description or "USB Serial" in port.description:
+        print(f"- {port.device}: {port.description}")
+    
+    # Try to find Arduino by common identifiers
+    for port in ports:
+        if any(identifier in port.description.lower() for identifier in [
+            "arduino",
+            "usb serial",
+            "usb-uart",
+            "ch340",  # Common Arduino clone chip
+            "cp210x",  # Common Arduino clone chip
+            "ftdi"     # Common Arduino clone chip
+        ]):
+            print(f"\nFound potential Arduino on {port.device}")
             return port.device
+            
+    # If no Arduino found by description, list all ports and ask user
+    print("\nNo Arduino automatically detected.")
+    print("Available ports:")
+    for i, port in enumerate(ports, 1):
+        print(f"{i}. {port.device}: {port.description}")
+    
+    try:
+        choice = int(input("\nEnter the number of the port to use: "))
+        if 1 <= choice <= len(ports):
+            selected_port = ports[choice - 1].device
+            print(f"Selected port: {selected_port}")
+            return selected_port
+    except (ValueError, IndexError):
+        print("Invalid selection!")
+    
     return None
 
 @app.on_event("startup")
@@ -36,18 +72,42 @@ async def startup_event():
     port = get_arduino_port()
     if port:
         try:
-            arduino = serial.Serial(port, 115200, timeout=1)
-            print(f"Connected to Arduino on {port}")
+            arduino = serial.Serial(
+                port=port,
+                baudrate=115200,
+                timeout=1,
+                bytesize=serial.EIGHTBITS,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE
+            )
+            print(f"\nSuccessfully connected to Arduino on {port}")
+            print("Waiting for Arduino to initialize...")
+            await asyncio.sleep(2)  # Give Arduino time to reset
+            
+            # Test connection
+            arduino.write(b"PING\n")
+            response = arduino.readline().decode().strip()
+            if response == "PONG":
+                print("Arduino connection verified!")
+            else:
+                print("Warning: Arduino response not as expected")
+                
         except Exception as e:
-            print(f"Failed to connect to Arduino: {e}")
+            print(f"\nFailed to connect to Arduino: {e}")
+            print("Please check:")
+            print("1. Arduino is properly connected")
+            print("2. No other program is using the port")
+            print("3. Correct port is selected")
+            print("4. Arduino code is uploaded")
     else:
-        print("No Arduino found")
+        print("\nNo Arduino found. Please connect an Arduino and restart the server.")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Close Arduino connection on shutdown"""
     if arduino and arduino.is_open:
         arduino.close()
+        print("\nArduino connection closed")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
