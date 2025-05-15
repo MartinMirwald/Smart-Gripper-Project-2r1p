@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { arduinoService } from '../services/ArduinoService';
+import { arduinoService, ArduinoMessage, SensorData } from '../services/ArduinoService';
 
 interface DataPoint {
   time: string;
@@ -16,6 +16,7 @@ const AnalyticsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [position, setPosition] = useState(50);
   const [isMoving, setIsMoving] = useState(false);
+  const [status, setStatus] = useState<string>('');
   
   // Connect to backend when component mounts
   useEffect(() => {
@@ -42,22 +43,27 @@ const AnalyticsPage: React.FC = () => {
   useEffect(() => {
     if (!isConnected) return;
 
-    const unsubscribe = arduinoService.onData((newData) => {
-      setData(prevData => {
-        const newPoint: DataPoint = {
-          time: '0s ago',
-          ...newData
-        };
-        
-        // Shift all times one second older
-        const updatedData = prevData.map((point, i) => ({
-          ...point,
-          time: `${i + 1}s ago`
-        }));
-        
-        // Add new point and remove oldest if more than 20 points
-        return [newPoint, ...updatedData.slice(0, 19)];
-      });
+    const unsubscribe = arduinoService.onData((message: ArduinoMessage) => {
+      if (message.type === 'sensor_data') {
+        const sensorData = message.data as SensorData;
+        setData(prevData => {
+          const newPoint: DataPoint = {
+            time: '0s ago',
+            ...sensorData
+          };
+          
+          // Shift all times one second older
+          const updatedData = prevData.map((point, i) => ({
+            ...point,
+            time: `${i + 1}s ago`
+          }));
+          
+          // Add new point and remove oldest if more than 20 points
+          return [newPoint, ...updatedData.slice(0, 19)];
+        });
+      } else if (message.type === 'command_response') {
+        setStatus(message.data as string);
+      }
     });
 
     return () => unsubscribe();
@@ -77,6 +83,32 @@ const AnalyticsPage: React.FC = () => {
     }
   };
 
+  const handleCommand = async (command: 'hold' | 'open' | 'close') => {
+    if (!isConnected) {
+      setError('Not connected to backend');
+      return;
+    }
+    try {
+      setIsMoving(true);
+      switch (command) {
+        case 'hold':
+          await arduinoService.hold();
+          break;
+        case 'open':
+          await arduinoService.open();
+          break;
+        case 'close':
+          await arduinoService.close();
+          break;
+      }
+    } catch (err) {
+      setError(`Failed to ${command} gripper`);
+      console.error(err);
+    } finally {
+      setIsMoving(false);
+    }
+  };
+
   return (
     <div className="p-6 bg-slate-900 min-h-screen">
       <h2 className="text-xl font-bold mb-6 text-blue-400 border-b border-blue-500/20 pb-2">Gripper Analytics</h2>
@@ -86,6 +118,42 @@ const AnalyticsPage: React.FC = () => {
           {error}
         </div>
       )}
+
+      {status && (
+        <div className="p-4 bg-blue-500/20 border border-blue-500 rounded-lg text-blue-200 mb-4">
+          {status}
+        </div>
+      )}
+
+      {/* Control Buttons */}
+      <div className="mb-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-4 border border-blue-400/20">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium text-blue-400">Gripper Controls</h3>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleCommand('open')}
+              disabled={!isConnected || isMoving}
+              className="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg border border-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Open
+            </button>
+            <button
+              onClick={() => handleCommand('hold')}
+              disabled={!isConnected || isMoving}
+              className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Hold
+            </button>
+            <button
+              onClick={() => handleCommand('close')}
+              disabled={!isConnected || isMoving}
+              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Position Control */}
       <div className="mb-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg shadow-lg p-4 border border-blue-400/20">

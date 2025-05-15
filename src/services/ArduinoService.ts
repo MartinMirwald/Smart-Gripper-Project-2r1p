@@ -1,3 +1,15 @@
+export interface SensorData {
+  magneticX: number;
+  magneticY: number;
+  magneticZ: number;
+  output: number;
+}
+
+export interface ArduinoMessage {
+  type: 'sensor_data' | 'command_response' | 'raw_message';
+  data: SensorData | string;
+}
+
 export class ArduinoService {
   private ws: WebSocket | null = null;
   private isWebSocketConnected = false;
@@ -132,7 +144,19 @@ export class ArduinoService {
     }
   }
 
-  onData(handler: (data: any) => void) {
+  async hold() {
+    return this.sendCommand('hold');
+  }
+
+  async open() {
+    return this.sendCommand('open');
+  }
+
+  async close() {
+    return this.sendCommand('close');
+  }
+
+  onData(handler: (data: ArduinoMessage) => void) {
     this.messageHandlers.push(handler);
     return () => {
       this.messageHandlers = this.messageHandlers.filter(h => h !== handler);

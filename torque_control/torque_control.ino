@@ -201,17 +201,17 @@ void loop() {
   // act according to open close hold state
   if (close) {
 
-    target_voltage = -output;  // PID macht Kraftregelung für close
-    Serial.println("close");
+    target_voltage = -5;//output;  // PID macht Kraftregelung für close
+    //Serial.println("close");
 
   } else if (open) {
     output = 6;
-    target_voltage = 6;  // open gripper
-    Serial.println("open");
+    target_voltage = 5;  // open gripper
+    //Serial.println("open");
   } else if (hold) {
     output =0;
     target_voltage = 0;
-    Serial.println("hold");
+    //Serial.println("hold");
   }
   // print the magnetic field data
   Serial.print(x);
