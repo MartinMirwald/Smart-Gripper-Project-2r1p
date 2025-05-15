@@ -18,11 +18,12 @@
  * This is a basic example; you can be creative to improve this gripper!
  */
 
- //TEST
+//TEST
 #include "TLE5012Sensor.h"
 #include "TLx493D_inc.hpp"
 #include "config.h"
 #include <SimpleFOC.h>
+#include <tlx5012-arduino.hpp>
 
 // define SPI pins for TLE5012 sensor
 #define PIN_SPI1_SS0 94   // Chip Select (CS) pin
@@ -30,6 +31,16 @@
 #define PIN_SPI1_MISO 95  // MISO pin
 #define PIN_SPI1_SCK 68   // SCK pin
 
+
+
+using namespace tle5012;
+
+Tle5012Ino Tle5012Sensor = Tle5012Ino();
+errorTypes checkError = NO_ERROR;
+
+double d;  // Winkel
+
+const float growth_thresh = 0.05;
 
 bool open = false;
 bool close = false;
@@ -149,6 +160,7 @@ void setup() {
   pinMode(BUTTON2, INPUT);
 #endif
 
+
   Serial.print("setup done.\n");
 #if ENABLE_COMMANDER
   // add target command T
@@ -164,7 +176,7 @@ void loop() {
 #if ENABLE_MAGNETIC_SENSOR
 
   // read the magnetic field data
-  double x, y, z;
+  double x, y, z, z_prev;
   dut.setSensitivity(TLx493D_FULL_RANGE_e);
   dut.getMagneticField(&x, &y, &z);
 
@@ -203,7 +215,7 @@ void loop() {
     target_voltage = 6;  // open gripper
     Serial.println("open");
   } else if (hold) {
-    output =0;
+    output = 0;
     target_voltage = 0;
     Serial.println("hold");
   }
@@ -250,7 +262,36 @@ void loop() {
   // user communication
   command.run();
 #endif
+
+
+  // Arme gehen nicht tiefer
+  Tle5012Sensor.getAngleValue(d);
+  Serial.println(d);
+  // Arme gehen nicht tiefer
+  if (d > 30) {
+    output = 0;
+    target_voltage = 0;
+  }
+
+  //motor stoppt bei wiederstand
+
+
+  float dz = z - z_prev;
+  if (dz > growth_thresh) 
+  {
+    // Z steigt stark genug → weiter greifen
+    output = 6;
+
+  } else {
+
+    output = 0;
+  }
+
+  z_prev = z;
+
 }
+
+
 
 #if ENABLE_MAGNETIC_SENSOR
 /**
@@ -301,11 +342,11 @@ float computePIDOutput(float current_force) {
 }
 
 float getDistance() {
-  double d = 0.0;
-  //Tle5012Sensor.getAngleValue(d);
+  //double d = 0.0;
+  Tle5012Sensor.getAngleValue(d);
   // d=d/360;
   Serial.println(d);
-
+  return d;
   //30 rad von zu bis offen
 }
 
