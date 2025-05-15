@@ -14,17 +14,19 @@ export default defineConfig(({ mode }) => ({
     // mode === 'development' && componentTagger(),
   ].filter(Boolean),
   server: {
-    host: "::",
+    host: true,
     port: 8080,
-        allowedHosts: [
-      '6b58493b-0114-46f7-a4b8-0994abcf6210.lovableproject.com'
-    ],
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true
       }
     },
+  },
+  preview: {
+    host: true,
+    allowedHosts: true,
   },
   resolve: {
     alias: {

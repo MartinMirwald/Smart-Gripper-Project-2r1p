@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import GripperVisualization from './GripperVisualization';
 import ControlPanel from './ControlPanel';
 import StatusDisplay from './StatusDisplay';
+import GripperControl from './GripperControl';
 
 const Dashboard: React.FC = () => {
   const [position, setPosition] = useState(50);
@@ -23,7 +24,8 @@ const Dashboard: React.FC = () => {
         <div className="w-full h-auto min-h-[400px] max-h-[600px]">
           <GripperVisualization position={position} force={force} />
         </div>
-        <div className="w-full">
+        <div className="w-full space-y-6">
+          <GripperControl />
           <ControlPanel 
             onPositionChange={setPosition} 
             onForceChange={setForce} 
