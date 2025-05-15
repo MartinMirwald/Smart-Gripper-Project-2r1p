@@ -146,4 +146,4 @@ We welcome contributions to improve the project. Please read our contributing gu
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
-- Infineon crew for their guidance and support
+- Infineon crew for their guidance and support, may the force be with you!
