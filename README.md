@@ -1,4 +1,4 @@
-# Smart Gripper Project - Team 2r1p
+# Smart Gripper Project - Team 2r1p 🤖
 
 ## Project Overview
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
@@ -128,7 +128,16 @@ Our team has developed an advanced smart gripper system that combines precise co
    ```
 4. Upload firmware to Arduino
 5. Start the backend server
-6. Launch the frontend application
+   ```bash
+   python server.py
+   ```
+7. Launch the frontend application
+      ```bash
+   npm run dev
+   ```
+## Showcas
+
+![Frontend preview](img/frontend.png)
 
 ## Contributing
 We welcome contributions to improve the project. Please read our contributing guidelines for details.
@@ -137,6 +146,4 @@ We welcome contributions to improve the project. Please read our contributing gu
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
-- Team members for their dedication and innovation
-- Project mentors for their guidance
-- Open-source community for their valuable resources
+- Infineon crew for their guidance and support
