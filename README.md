@@ -155,4 +155,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - The Infineon crew for their guidance and support, may the force be with you!
 - Special thanks to R2‑D2 for compliant beep‑boop translations.
 
-![r2d2](https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33)
+<img src="https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33" alt="Baby Grogu" align="right" width="200">
