@@ -209,7 +209,7 @@ if (abs(y)+abs(z) > abs(forcethreshhold)) {  //z < forcethreshhold) {
   y -= yOffset;
   z -= zOffset;
 
-  output = computePIDOutput(z);
+ // output = computePIDOutput(z);
 
   //read buttons decide open close hold state
   if (digitalRead(BUTTON2) == LOW && digitalRead(BUTTON1) == LOW) {
@@ -400,7 +400,7 @@ void sendStates() {
 
   Serial.print(z);
   Serial.print(",");
-  Serial.print(output);
+  Serial.print(target_voltage);
 
   Serial.print(",");
   double d=getDistanceM();
