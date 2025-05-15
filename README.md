@@ -1,5 +1,7 @@
 # Smart Gripper Project - Team 2r1p 🤖
 
+![Luke Skywalker Hand](img/lukehand.png)
+
 ## Project Overview
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
 
@@ -135,7 +137,7 @@ Our team has developed an advanced smart gripper system that combines precise co
       ```bash
    npm run dev
    ```
-## Showcas
+## Frontend Showcase
 
 ![Frontend preview](img/frontend.png)
 
@@ -146,4 +148,4 @@ We welcome contributions to improve the project. Please read our contributing gu
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Acknowledgments
-- Infineon crew for their guidance and support
+- Infineon crew for their guidance and support, may the force be with you!
