@@ -140,11 +140,19 @@ async def startup_event():
             # Test connection
             print("Testing connection...")
             arduino_conn.write_command("PING")
-            response = arduino_conn.read_data()
-            if response == "PONG":
-                print("Arduino connection verified!")
+            
+            # Try to get PONG response, but also accept sensor data as valid
+            for _ in range(5):  # Try up to 5 times
+                response = arduino_conn.read_data()
+                if response == "PONG":
+                    print("Arduino connection verified!")
+                    break
+                elif response and ',' in response:  # If we get sensor data, that's also fine
+                    print("Arduino connection verified (receiving sensor data)")
+                    break
+                await asyncio.sleep(0.5)  # Wait a bit before next try
             else:
-                print(f"Warning: Arduino response not as expected. Got: {response}")
+                print("Warning: Could not verify Arduino response, but continuing anyway")
         else:
             print("\nFailed to connect to Arduino")
             print("\nPlease check:")
