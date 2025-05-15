@@ -6,8 +6,11 @@ interface GripperVisualizationProps {
 }
 
 const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, force }) => {
+  // Clamp position between 0 and 100
+  const clampedPosition = Math.max(0, Math.min(100, position));
+  
   // Calculate gripper position for visualization
-  const openAmount = position; // No inversion needed - Arduino sends 0=closed, 100=open
+  const openAmount = clampedPosition; // No inversion needed - Arduino sends 0=closed, 100=open
   // Move fingers slightly to the right by adjusting the base positions
   const leftFingerPosition = `calc(46.55% - ${25 + openAmount/3}px)`;
   const rightFingerPosition = `calc(46.3% + ${25 + openAmount/3}px)`;
@@ -18,7 +21,10 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
                     'bg-red-500';
   
   // Calculate distance between fingers
-  const distanceMm = Math.max(5, Math.round(position * 0.5));
+  const distanceMm = Math.max(5, Math.round(clampedPosition * 0.5));
+  
+  // Show warning if position is out of range
+  const isOutOfRange = position < 0 || position > 100;
   
   return (
     <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-lg shadow-lg p-4 h-full border border-blue-500/30 shadow-blue-500/10">
@@ -154,8 +160,18 @@ const GripperVisualization: React.FC<GripperVisualizationProps> = ({ position, f
         {/* Position and distance indicator */}
         <div className="absolute bottom-3 right-3 bg-slate-900/90 p-2 rounded-md shadow-lg backdrop-blur-sm border border-blue-400/20 z-10">
           <div className="text-xs font-medium text-blue-400">Position</div>
-          <div className="text-right font-bold text-xs text-blue-300">{Math.round(position)}%</div>
+          <div className="text-right font-bold text-xs text-blue-300">
+            {Math.round(clampedPosition)}%
+            {isOutOfRange && (
+              <span className="ml-1 text-yellow-500">(clamped)</span>
+            )}
+          </div>
           <div className="text-xs text-blue-400 mt-1">Distance: {distanceMm}mm</div>
+          {isOutOfRange && (
+            <div className="text-xs text-yellow-500 mt-1">
+              Raw: {position.toFixed(1)}%
+            </div>
+          )}
         </div>
       </div>
     </div>
