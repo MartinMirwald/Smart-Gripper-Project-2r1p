@@ -1,4 +1,6 @@
 # Smart Gripper Project - Team 2r1p - TUM 🤖
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 
 ![Star-Wars-Last-Jedi-Easter-Egg-Luke-Hand](https://github.com/user-attachments/assets/050e000a-8525-4df5-85df-97ec0d7f99ca)
 
@@ -8,6 +10,8 @@
 > *(Star Wars theme to match the jury's humor.)*
 
 ## Project Overview - Hello There!
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
 
 ## Key Features
@@ -43,6 +47,8 @@ Our team has developed an advanced smart gripper system that combines precise co
 - **Safety Features**: Automatic limit detection for closing and opening to prevent motor overheating or disengaging of gears
 
 ## Technical Implementation
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 
 ### Hardware Stack
 - **Main Controller**: Infineon XMC4700 Relax Kit
@@ -71,6 +77,8 @@ Our team has developed an advanced smart gripper system that combines precise co
 <img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
 
 ## Development Process
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 
 ### Day 1: Hardware and Basic Control
 - Initial hardware setup and calibration
@@ -102,6 +110,8 @@ Our team has developed an advanced smart gripper system that combines precise co
    - Performance analytics
 
 ## Technical Challenges and Solutions
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 
 ### Challenge 1: Control Tuning
 - **Problem**: Manual PID tuning for BLDC motors is complex and time-consuming + parameters are dependend on hardware condition
@@ -119,6 +129,8 @@ Our team has developed an advanced smart gripper system that combines precise co
 <img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
 
 ## Getting Started
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 
 ### Prerequisites
 - Python 3.8+
@@ -147,17 +159,26 @@ Our team has developed an advanced smart gripper system that combines precise co
    npm run dev
    ```
 ## Frontend Showcase
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 
 ![Frontend preview](img/frontend.png)
 
 ## Contributing
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 We welcome contributions to improve the project. Please read our contributing guidelines for details.
 
 ## License
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 This project is licensed under the MIT License - see the LICENSE file for details.
 <img src="https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33" alt="Baby Grogu" align="right" width="200">
 ## Acknowledgments
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 - The Infineon crew for their guidance and support, may the force be with you!
+- Eestec for hosting the hackathon!
 - Special thanks to R2‑D2 for compliant beep‑boop translations.
 
 
