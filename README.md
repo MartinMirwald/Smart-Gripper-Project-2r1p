@@ -11,6 +11,8 @@
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
 
 ## Key Features
+<img src="https://raw.githubusercontent.com/jmhobbs/cultofthepartyparrot.com/master/parrots/lightsaberparrot.gif" alt="Lightsaber Divider" width="200" />
+
 
 ### 1. Intelligent Control System
 - **Adaptive Force Control**: Dynamic adjustment of grip force based on object properties like size
