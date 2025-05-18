@@ -11,7 +11,7 @@
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
 
 ## Key Features
-<img src="[https://raw.githubusercontent.com/jmhobbs/cultofthepartyparrot.com/master/parrots/lightsaberparrot.gif](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)" alt="Lightsaber Divider" width="200" />
+![Lightsaber-underline]([https://github.com/user-attachments/assets/050e000a-8525-4df5-85df-97ec0d7f99ca](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png))
 
 
 ### 1. Intelligent Control System
