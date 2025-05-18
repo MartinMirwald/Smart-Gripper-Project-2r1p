@@ -10,12 +10,12 @@
 > *(Star Wars theme to match the jury's humor.)*
 
 ## Project Overview - Hello There!
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 Our team has developed an advanced smart gripper system that combines precise control, real-time feedback, and intelligent object handling capabilities. The system features a modern web-based interface with voice control, real-time data visualization, and adaptive control strategies.
 
 ## Key Features
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 
 ### 1. Intelligent Control System
@@ -47,7 +47,7 @@ Our team has developed an advanced smart gripper system that combines precise co
 - **Safety Features**: Automatic limit detection for closing and opening to prevent motor overheating or disengaging of gears
 
 ## Technical Implementation
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 
 ### Hardware Stack
@@ -68,8 +68,8 @@ Our team has developed an advanced smart gripper system that combines precise co
 ### Control Algorithms
 
 1. **PID Tuning System**
-   <img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
    - self tuning by user dependend on hardware condition
+     <img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
 
 
 3. **Smart Control Strategy**
@@ -79,7 +79,7 @@ Our team has developed an advanced smart gripper system that combines precise co
   
 
 ## Development Process
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 
 ### Day 1: Hardware and Basic Control
@@ -96,8 +96,7 @@ Our team has developed an advanced smart gripper system that combines precise co
 - restructuring of the code
 
 ## Future Improvements
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
-
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 1. **Enhanced Control**
    - Advanced PID auto-tuning
    - Machine learning-based parameter optimization
@@ -114,17 +113,16 @@ Our team has developed an advanced smart gripper system that combines precise co
    - Performance analytics
 
 ## Technical Challenges and Solutions
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 
 ### Challenge 1: Control Tuning
 - **Problem**: Manual PID tuning for BLDC motors is complex and time-consuming + parameters are dependend on hardware condition
-- **Solution**: 
+- **Solution**: <img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
   - Developed alternative adaptive control strategies
   - Created real-time performance monitoring
 
 ### Challenge 2: Smart Control
-<img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
 - **Problem**: Need for intelligent, adaptive control beyond basic PID
 - **Solution**:
   - Implemented dynamic force adjustment
@@ -164,23 +162,22 @@ Our team has developed an advanced smart gripper system that combines precise co
    npm run dev
    ```
 ## Frontend Showcase
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 
 ![Frontend preview](img/frontend.png)
 
 ## Contributing
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 We welcome contributions to improve the project. Please read our contributing guidelines for details.
 
 ## License
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 ## Acknowledgments
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
-
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 - The Infineon crew for their guidance and support, may the force be with you! <img src="https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33" alt="Baby Grogu" align="right" width="200">
 - Eestec for hosting the hackathon!
 - Special thanks to R2‑D2 for compliant beep‑boop translations.
