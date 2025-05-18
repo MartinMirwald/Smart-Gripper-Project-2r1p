@@ -66,9 +66,10 @@ Our team has developed an advanced smart gripper system that combines precise co
   - Serial protocol for hardware control
 
 ### Control Algorithms
+<img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
+
 1. **PID Tuning System**
    - self tuning by user dependend on hardware condition
-<img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
 
 
 2. **Smart Control Strategy**
@@ -77,7 +78,7 @@ Our team has developed an advanced smart gripper system that combines precise co
    - Force profile optimization (in future)
   
 
-##Development Process
+## Development Process
 ![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
 
 
