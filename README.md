@@ -133,7 +133,7 @@ Our team has developed an advanced smart gripper system that combines precise co
 
 
 ## Getting Started
-<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="10">
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
 
 
 
