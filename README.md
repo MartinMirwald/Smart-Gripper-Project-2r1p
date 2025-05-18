@@ -118,7 +118,7 @@ Our team has developed an advanced smart gripper system that combines precise co
 
 ### Challenge 1: Control Tuning
 - **Problem**: Manual PID tuning for BLDC motors is complex and time-consuming + parameters are dependend on hardware condition
-- **Solution**: <img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
+- **Solution**: 
   - Developed alternative adaptive control strategies
   - Created real-time performance monitoring
 
@@ -135,7 +135,7 @@ Our team has developed an advanced smart gripper system that combines precise co
 
 
 
-### Prerequisites
+### Prerequisites <img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
 - Python 3.8+
 - Node.js 14+
 - Arduino IDE
