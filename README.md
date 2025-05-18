@@ -69,10 +69,10 @@ Our team has developed an advanced smart gripper system that combines precise co
 
 1. **PID Tuning System**
    - self tuning by user dependend on hardware condition
-     <img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
+    
 
 
-3. **Smart Control Strategy**
+3. **Smart Control Strategy** <img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
    - Object property detection (size)
    - Material classification (in future based on force change over time)
    - Force profile optimization (in future)
