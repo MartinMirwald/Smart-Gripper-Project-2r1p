@@ -177,8 +177,8 @@ We welcome contributions to improve the project. Please read our contributing gu
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 ## Acknowledgments
-<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20">
-- The Infineon crew for their guidance and support, may the force be with you! <img src="https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33" alt="Baby Grogu" align="right" width="200">
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="20"> <img src="https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33" alt="Baby Grogu" align="right" width="200">
+- The Infineon crew for their guidance and support, may the force be with you! 
 - Eestec for hosting the hackathon!
 - Special thanks to R2‑D2 for compliant beep‑boop translations.
 
