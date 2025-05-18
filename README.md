@@ -66,13 +66,13 @@ Our team has developed an advanced smart gripper system that combines precise co
   - Serial protocol for hardware control
 
 ### Control Algorithms
-<img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
 
 1. **PID Tuning System**
+   <img src="https://github.com/user-attachments/assets/e352c304-e485-43d3-867f-6c6a1aecacd7" alt="Baby Grogu" align="right" width="200">
    - self tuning by user dependend on hardware condition
 
 
-2. **Smart Control Strategy**
+3. **Smart Control Strategy**
    - Object property detection (size)
    - Material classification (in future based on force change over time)
    - Force profile optimization (in future)
@@ -124,13 +124,13 @@ Our team has developed an advanced smart gripper system that combines precise co
   - Created real-time performance monitoring
 
 ### Challenge 2: Smart Control
+<img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
 - **Problem**: Need for intelligent, adaptive control beyond basic PID
 - **Solution**:
   - Implemented dynamic force adjustment
   - Developed object property detection
   - Created smart grip and release strategies
 
-<img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
 
 ## Getting Started
 <img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="10">
@@ -178,11 +178,10 @@ We welcome contributions to improve the project. Please read our contributing gu
 ![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-<img src="https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33" alt="Baby Grogu" align="right" width="200">
 ## Acknowledgments
 ![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
 
-- The Infineon crew for their guidance and support, may the force be with you!
+- The Infineon crew for their guidance and support, may the force be with you! <img src="https://github.com/user-attachments/assets/7dea9f22-c0d6-41c7-b6fa-50652db1ed33" alt="Baby Grogu" align="right" width="200">
 - Eestec for hosting the hackathon!
 - Special thanks to R2‑D2 for compliant beep‑boop translations.
 
