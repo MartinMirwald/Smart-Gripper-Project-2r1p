@@ -94,6 +94,8 @@ Our team has developed an advanced smart gripper system that combines precise co
 - restructuring of the code
 
 ## Future Improvements
+![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+
 1. **Enhanced Control**
    - Advanced PID auto-tuning
    - Machine learning-based parameter optimization
@@ -129,7 +131,8 @@ Our team has developed an advanced smart gripper system that combines precise co
 <img src="https://github.com/user-attachments/assets/4e55fb5d-75bc-443b-ab9d-717ad2663284" alt="Baby Grogu" align="right" width="200">
 
 ## Getting Started
-![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
+<img src="https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png?raw=true" alt="Lightsaber Divider" width="100%" height="10">
+
 
 
 ### Prerequisites
