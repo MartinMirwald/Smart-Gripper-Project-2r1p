@@ -1,5 +1,9 @@
 # Smart Gripper Project - Team 2r1p - TUM 🤖
---------------------------------(1st place local round muich, 1st place final round trieste 1050€ price money)
+
+<p align="right">
+(EESTEC hackathon 1st place local round Munich, 1st place final round Trieste, €1050 prize money)
+</p>
+
 ![Lightsaber-underline](https://github.com/MartinMirwald/Smart-Gripper-Project-2r1p/blob/main/img/lightsaber-1980163_1280.png)
 
 
